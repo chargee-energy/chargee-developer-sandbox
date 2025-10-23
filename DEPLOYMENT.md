@@ -36,6 +36,16 @@ This guide covers deploying the Chargee Developer Sandbox to various cloud platf
    heroku open
    ```
 
+### Alternative: One-Click Deploy
+
+Use the included `app.json` for one-click deployment:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/chargee-energy/chargee-developer-sandbox)
+
+### Important: Memory Optimization
+
+The project includes a `Procfile` that serves the production build using `serve`, which uses significantly less memory than the development server. This prevents the R14 (Memory quota exceeded) error on Heroku's free tier.
+
 ### Heroku Configuration Files
 
 Create `app.json` for one-click deployment:
