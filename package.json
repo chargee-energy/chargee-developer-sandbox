@@ -1,6 +1,18 @@
 {
   "name": "chargee-developer-sandbox",
   "version": "0.1.0",
+  "description": "React frontend demonstrating Ampere API integration with real-time energy monitoring",
+  "keywords": ["react", "energy", "api", "chargee", "ampere", "real-time", "monitoring"],
+  "author": "Chargee Energy",
+  "license": "MIT",
+  "homepage": "https://github.com/chargee/chargee-developer-sandbox",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chargee/chargee-developer-sandbox.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chargee/chargee-developer-sandbox/issues"
+  },
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
@@ -19,7 +31,13 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "docker:build": "docker build -t chargee-sandbox .",
+    "docker:run": "docker run -p 3000:80 chargee-sandbox",
+    "docker:compose": "docker-compose up -d",
+    "docker:compose:build": "docker-compose up -d --build",
+    "docker:logs": "docker-compose logs -f",
+    "docker:stop": "docker-compose down"
   },
   "eslintConfig": {
     "extends": [
