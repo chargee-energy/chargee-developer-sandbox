@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://ampere.prod.thunder.chargee.io/api/v2';
+const API_BASE_URL = process.env.REACT_APP_AMPERE_API_URL || 'https://ampere.prod.thunder.chargee.io/api/v2';
 
 // Create axios instance with default config
 const api = axios.create({
