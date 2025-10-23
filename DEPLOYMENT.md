@@ -44,7 +44,7 @@ Create `app.json` for one-click deployment:
 {
   "name": "Chargee Developer Sandbox",
   "description": "React frontend for Ampere API integration",
-  "repository": "https://github.com/chargee/chargee-developer-sandbox",
+  "repository": "https://github.com/chargee-energy/chargee-developer-sandbox",
   "logo": "https://www.chargee.energy/images/chargee-icon.svg",
   "keywords": ["react", "energy", "api", "chargee"],
   "env": {
@@ -163,7 +163,7 @@ The included `docker-compose.yml` works out of the box with Coolify.
            "logDriver": "awslogs",
            "options": {
              "awslogs-group": "/ecs/chargee-sandbox",
-             "awslogs-region": "us-east-1",
+             "awslogs-region": "eu-west-1",
              "awslogs-stream-prefix": "ecs"
            }
          }

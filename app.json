@@ -1,7 +1,7 @@
 {
   "name": "Chargee Developer Sandbox",
   "description": "React frontend for Ampere API integration",
-  "repository": "https://github.com/chargee/chargee-developer-sandbox",
+  "repository": "https://github.com/chargee-energy/chargee-developer-sandbox",
   "logo": "https://www.chargee.energy/images/chargee-icon.svg",
   "keywords": ["react", "energy", "api", "chargee"],
   "env": {
@@ -14,5 +14,8 @@
     {
       "url": "https://github.com/mars/create-react-app-buildpack.git"
     }
-  ]
+  ],
+  "scripts": {
+    "postdeploy": "npm run build"
+  }
 }
