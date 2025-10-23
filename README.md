@@ -1,70 +1,241 @@
-# Getting Started with Create React App
+# Chargee Developer Sandbox
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React frontend application demonstrating how to integrate with the Ampere API. This project showcases authentication, real-time energy monitoring, and device management capabilities.
 
-## Available Scripts
+![Chargee Developer Sandbox](https://img.shields.io/badge/React-18.2.0-blue.svg)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
 
-In the project directory, you can run:
+## 🚀 Features
 
-### `npm start`
+- **Authentication**: Secure login with JWT token management
+- **Real-time Energy Monitoring**: Live power consumption and export visualization
+- **Device Management**: View and manage EVs, chargers, solar inverters, and more
+- **Sparky Integration**: Real-time energy data from Chargee Sparky devices
+- **Admin Tools**: Direct API querying capabilities for administrators
+- **Responsive Design**: Modern UI with Chargee branding
+- **Docker Ready**: Easy deployment with Docker Compose
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 📋 Prerequisites
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Node.js 18+ and npm
+- Docker and Docker Compose (for containerized deployment)
+- Ampere API access credentials
 
-### `npm test`
+## 🛠️ Quick Start
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Option 1: Local Development
 
-### `npm run build`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/chargee/chargee-developer-sandbox.git
+   cd chargee-developer-sandbox
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+4. **Open your browser**
+   Navigate to `http://localhost:3000`
 
-### `npm run eject`
+### Option 2: Docker Deployment
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. **Clone and run with Docker Compose**
+   ```bash
+   git clone https://github.com/chargee/chargee-developer-sandbox.git
+   cd chargee-developer-sandbox
+   docker-compose up -d
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. **Access the application**
+   Navigate to `http://localhost:3000`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🔧 Configuration
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Environment Variables
 
-## Learn More
+Create a `.env` file in the root directory:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```env
+# Ampere API Configuration
+REACT_APP_AMPERE_API_URL=https://ampere.prod.thunder.chargee.io/api/v2
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Optional: Custom API URL for development
+# REACT_APP_AMPERE_API_URL=http://localhost:8080/api/v2
+```
 
-### Code Splitting
+### API Endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+The application integrates with the following Ampere API endpoints:
 
-### Analyzing the Bundle Size
+- **Authentication**: `/auth/login`, `/auth/me`
+- **Groups**: `/groups`
+- **Addresses**: `/groups/{group_uuid}/addresses`
+- **Devices**: Various device-specific endpoints
+- **Sparky**: Real-time energy monitoring endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 🏗️ Project Structure
 
-### Making a Progressive Web App
+```
+src/
+├── components/          # React components
+│   ├── Login.js         # Authentication component
+│   ├── Dashboard.js     # Main dashboard
+│   ├── SparkyDetails.js # Energy monitoring
+│   └── EnergyGraph.js   # Real-time charts
+├── contexts/            # React contexts
+│   └── AuthContext.js   # Authentication state
+├── services/            # API services
+│   └── api.js          # API client configuration
+└── App.js              # Main application component
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 📊 API Integration Examples
 
-### Advanced Configuration
+### Authentication
+```javascript
+import { authAPI } from './services/api';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+// Login
+const result = await authAPI.login(email, password);
+const { accessToken } = result;
 
-### Deployment
+// Get current user
+const user = await authAPI.getMe();
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Fetching Groups and Addresses
+```javascript
+import { groupsAPI, addressesAPI } from './services/api';
 
-### `npm run build` fails to minify
+// Get user groups
+const groups = await groupsAPI.getGroups();
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+// Get addresses for a group
+const addresses = await addressesAPI.getAddresses(groupUuid);
+```
+
+### Real-time Energy Monitoring
+```javascript
+import { sparkyAPI } from './services/api';
+
+// Get latest electricity data
+const data = await sparkyAPI.getElectricityLatestP1(serialNumber);
+const netPower = (data.power_returned - data.power_delivered) * 1000; // Convert to Watts
+```
+
+## 🚀 Deployment
+
+### Heroku
+
+1. **Create a Heroku app**
+   ```bash
+   heroku create your-app-name
+   ```
+
+2. **Set environment variables**
+   ```bash
+   heroku config:set REACT_APP_AMPERE_API_URL=https://ampere.prod.thunder.chargee.io/api/v2
+   ```
+
+3. **Deploy**
+   ```bash
+   git push heroku main
+   ```
+
+### Coolify
+
+1. **Import the repository** in Coolify
+2. **Set environment variables** in the Coolify dashboard
+3. **Deploy** using the Docker Compose configuration
+
+### AWS (ECS/Fargate)
+
+1. **Build and push Docker image**
+   ```bash
+   docker build -t chargee-sandbox .
+   docker tag chargee-sandbox:latest your-ecr-repo/chargee-sandbox:latest
+   docker push your-ecr-repo/chargee-sandbox:latest
+   ```
+
+2. **Deploy using ECS** with the provided task definition
+
+### Docker Compose
+
+The included `docker-compose.yml` provides:
+
+- **Nginx reverse proxy** for production-ready serving
+- **Multi-stage build** for optimized image size
+- **Environment variable** configuration
+- **Health checks** for container monitoring
+
+## 🔐 Security Considerations
+
+- **No hardcoded credentials**: All API endpoints use environment variables
+- **JWT token management**: Secure token storage and automatic refresh
+- **CORS configuration**: Proper cross-origin request handling
+- **Input validation**: Client-side validation for all forms
+
+## 🧪 Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run linting
+npm run lint
+```
+
+## 📚 API Documentation
+
+For detailed API documentation, visit:
+- [Ampere API Swagger](https://ampere.prod.thunder.chargee.io/api/v2#/)
+
+### Key Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/auth/login` | POST | User authentication |
+| `/auth/me` | GET | Get current user info |
+| `/groups` | GET | List user groups |
+| `/groups/{id}/addresses` | GET | List group addresses |
+| `/sparkies/{serial}/electricity/latest-p1` | GET | Real-time energy data |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: [Ampere API Docs](https://ampere.prod.thunder.chargee.io/api/v2#/)
+- **Issues**: [GitHub Issues](https://github.com/chargee/chargee-developer-sandbox/issues)
+- **Email**: support@chargee.energy
+
+## 🙏 Acknowledgments
+
+- Built with [React](https://reactjs.org/)
+- Charts powered by [Recharts](https://recharts.org/)
+- Styled with [CSS Custom Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties)
+- Deployed with [Docker](https://www.docker.com/)
+
+---
+
+**Made with ❤️ by the Chargee Team**

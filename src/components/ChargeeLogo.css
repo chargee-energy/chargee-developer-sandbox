@@ -1,0 +1,133 @@
+/* Chargee Logo Styles */
+.chargee-logo {
+  display: flex;
+  align-items: center;
+  font-family: var(--chargee-font-primary);
+}
+
+.logo-full {
+  display: flex;
+  align-items: center;
+  gap: var(--chargee-space-sm);
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-svg {
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.logo-brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--chargee-gray-900);
+  letter-spacing: -0.3px;
+}
+
+.logo-tagline {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--chargee-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logo-icon-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Size variants */
+.logo-small .logo-svg {
+  width: 24px;
+  height: 24px;
+}
+
+.logo-small .logo-brand {
+  font-size: 16px;
+}
+
+.logo-small .logo-tagline {
+  font-size: 10px;
+}
+
+.logo-medium .logo-svg {
+  width: 32px;
+  height: 32px;
+}
+
+.logo-medium .logo-brand {
+  font-size: 20px;
+}
+
+.logo-medium .logo-tagline {
+  font-size: 12px;
+}
+
+.logo-large .logo-svg {
+  width: 40px;
+  height: 40px;
+}
+
+.logo-large .logo-brand {
+  font-size: 28px;
+}
+
+.logo-large .logo-tagline {
+  font-size: 14px;
+}
+
+/* Color variants */
+.logo-white .logo-brand {
+  color: var(--chargee-white);
+}
+
+.logo-white .logo-tagline {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Hover effects */
+.chargee-logo:hover .logo-svg {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Login page specific styling */
+.login-logo {
+  margin-bottom: var(--chargee-space-md);
+}
+
+/* Dashboard header specific styling */
+.dashboard-logo {
+  margin-right: var(--chargee-space-lg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo-large .logo-svg {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .logo-large .logo-brand {
+    font-size: 24px;
+  }
+  
+  .logo-large .logo-tagline {
+    font-size: 12px;
+  }
+}

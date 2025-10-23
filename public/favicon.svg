@@ -1,0 +1,24 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chargeeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00BFA5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00897B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="32" height="32" fill="rgb(29, 21, 67)" rx="6"/>
+  
+  <!-- Chargee Logo Icon -->
+  <g transform="translate(6, 6)">
+    <!-- Main circle -->
+    <circle cx="10" cy="10" r="8" fill="url(#chargeeGradient)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+    
+    <!-- Inner design elements -->
+    <circle cx="10" cy="10" r="5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <circle cx="10" cy="10" r="2.5" fill="rgba(255,255,255,0.2)"/>
+    
+    <!-- Energy bolt/lightning -->
+    <path d="M8 6 L12 10 L10 10 L12 14 L8 10 L10 10 Z" fill="rgba(255,255,255,0.8)" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+  </g>
+</svg>
