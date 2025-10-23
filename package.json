@@ -5,7 +5,6 @@
   "keywords": ["react", "energy", "api", "chargee", "ampere", "real-time", "monitoring"],
   "author": "Chargee Energy",
   "license": "MIT",
-  "homepage": "https://github.com/chargee/chargee-developer-sandbox",
   "repository": {
     "type": "git",
     "url": "https://github.com/chargee/chargee-developer-sandbox.git"
