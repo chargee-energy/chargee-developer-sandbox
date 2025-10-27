@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { groupsAPI, addressesAPI, devicesAPI, sparkyAPI } from '../services/api';
 import ChargeeLogo from './ChargeeLogo';
 import './Dashboard.css';
@@ -8,6 +8,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [groups, setGroups] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [devices, setDevices] = useState({
@@ -30,10 +31,55 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [adminQuery, setAdminQuery] = useState('');
   const [adminQueryResult, setAdminQueryResult] = useState(null);
+  const [addressSearch, setAddressSearch] = useState('');
+  const [addressPage, setAddressPage] = useState(1);
+  const addressesPerPage = 20;
 
+  // Fetch groups on mount
   useEffect(() => {
     fetchGroups();
   }, []);
+
+  // Restore selection from URL after groups load
+  useEffect(() => {
+    const groupUuid = searchParams.get('group');
+    
+    if (groupUuid && groups.length > 0 && !selectedGroup) {
+      const group = groups.find(g => g.uuid === groupUuid);
+      if (group) {
+        setSelectedGroup(group);
+        fetchAddresses(group.uuid);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups, searchParams]);
+
+  // Restore address selection after addresses load
+  useEffect(() => {
+    const addressUuid = searchParams.get('address');
+    
+    if (addressUuid && addresses.length > 0 && !selectedAddress && selectedGroup) {
+      const address = addresses.find(a => a.uuid === addressUuid);
+      if (address) {
+        setSelectedAddress(address);
+        fetchDevices(selectedGroup.uuid, address.uuid);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addresses, selectedGroup, searchParams]);
+
+  // Update URL when selection changes
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedGroup) {
+      params.set('group', selectedGroup.uuid);
+    }
+    if (selectedAddress) {
+      params.set('address', selectedAddress.uuid);
+    }
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGroup, selectedAddress]);
 
   const fetchGroups = async () => {
     setLoading(prev => ({ ...prev, groups: true }));
@@ -148,6 +194,9 @@ const Dashboard = () => {
 
   const handleGroupSelect = (group) => {
     setSelectedGroup(group);
+    setSelectedAddress(null); // Clear selected address when changing groups
+    setAddressSearch('');
+    setAddressPage(1);
     fetchAddresses(group.uuid);
   };
 
@@ -230,6 +279,22 @@ const Dashboard = () => {
       setLoading(prev => ({ ...prev, adminQuery: false }));
     }
   };
+
+  // Filter and paginate addresses
+  const filteredAddresses = addresses.filter((address) => {
+    if (!addressSearch.trim()) return true;
+    const searchLower = addressSearch.toLowerCase();
+    return (
+      address.uuid.toLowerCase().includes(searchLower) ||
+      address.sparky?.serialNumber?.toLowerCase().includes(searchLower) ||
+      address.sparky?.boxCode?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredAddresses.length / addressesPerPage);
+  const startIndex = (addressPage - 1) * addressesPerPage;
+  const endIndex = startIndex + addressesPerPage;
+  const paginatedAddresses = filteredAddresses.slice(startIndex, endIndex);
 
   return (
     <div className="dashboard">
@@ -562,7 +627,7 @@ const Dashboard = () => {
                     onClick={() => handleGroupSelect(group)}
                   >
                     <div className="item-title">{group.name}</div>
-                    <div className="item-subtitle">{group.uuid}</div>
+                    <div className="item-subtitle uuid">{group.uuid}</div>
                   </div>
                 ))}
               </div>
@@ -573,42 +638,96 @@ const Dashboard = () => {
 
           {/* Addresses Section */}
           <div className="section">
-            <h2>Addresses</h2>
+            <div className="section-header">
+              <h2>Addresses</h2>
+              {selectedGroup && addresses.length > 0 && (
+                <span className="section-count">({addresses.length})</span>
+              )}
+            </div>
             {!selectedGroup ? (
               <div className="placeholder">Select a group to view addresses</div>
             ) : loading.addresses ? (
               <div className="loading">Loading addresses...</div>
             ) : Array.isArray(addresses) && addresses.length > 0 ? (
-              <div className="list">
-                {addresses.map((address) => (
-                  <div
-                    key={address.uuid}
-                    className={`list-item ${selectedAddress?.uuid === address.uuid ? 'selected' : ''}`}
-                  >
-                    <div 
-                      className="address-content"
-                      onClick={() => handleAddressSelect(address)}
-                    >
-                      <div className="item-title">Address {address.uuid.slice(0, 8)}...</div>
-                      <div className="item-subtitle">Sparky: {address.sparky?.serialNumber || 'Unknown'}</div>
-                      <div className="item-details">
-                        <span className="status">Box: {address.sparky?.boxCode || 'N/A'}</span>
-                      </div>
-                    </div>
-                    {address.sparky && (
-                      <button 
-                        className="sparky-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewSparky(address);
-                        }}
+              <>
+                {/* Search Box */}
+                <div className="search-box">
+                  <input
+                    type="text"
+                    placeholder="Search by UUID, serial number, or box code..."
+                    value={addressSearch}
+                    onChange={(e) => {
+                      setAddressSearch(e.target.value);
+                      setAddressPage(1); // Reset to first page on search
+                    }}
+                    className="search-input"
+                  />
+                </div>
+
+                {/* Addresses List */}
+                <div className="list">
+                  {paginatedAddresses.length > 0 ? (
+                    paginatedAddresses.map((address) => (
+                      <div
+                        key={address.uuid}
+                        className={`list-item ${selectedAddress?.uuid === address.uuid ? 'selected' : ''}`}
                       >
-                        View Sparky
+                        <div 
+                          className="address-content"
+                          onClick={() => handleAddressSelect(address)}
+                        >
+                          <div className="item-title uuid">{address.uuid}</div>
+                          <div className="item-subtitle">Sparky: {address.sparky?.serialNumber || 'Unknown'}</div>
+                          <div className="item-details">
+                            <span className="status">Box: {address.sparky?.boxCode || 'N/A'}</span>
+                          </div>
+                        </div>
+                        {address.sparky && (
+                          <button 
+                            className="sparky-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewSparky(address);
+                            }}
+                          >
+                            View Sparky
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="placeholder">No addresses match your search</div>
+                  )}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="pagination">
+                    <div className="pagination-info">
+                      Showing {startIndex + 1}-{Math.min(endIndex, filteredAddresses.length)} of {filteredAddresses.length}
+                    </div>
+                    <div className="pagination-controls">
+                      <button
+                        onClick={() => setAddressPage(prev => Math.max(1, prev - 1))}
+                        disabled={addressPage === 1}
+                        className="pagination-button"
+                      >
+                        Previous
                       </button>
-                    )}
+                      <span className="pagination-pages">
+                        Page {addressPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setAddressPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={addressPage === totalPages}
+                        className="pagination-button"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             ) : (
               <div className="placeholder">No addresses found</div>
             )}

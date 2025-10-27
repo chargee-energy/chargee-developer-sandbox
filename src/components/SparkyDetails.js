@@ -84,7 +84,8 @@ const SparkyDetails = () => {
   }, [sparky?.serialNumber, fetchSparkyData]);
 
   const handleBackToDashboard = () => {
-    navigate('/dashboard');
+    // Use browser history to go back, which preserves the previous state
+    navigate(-1);
   };
 
   const formatData = (data) => {
