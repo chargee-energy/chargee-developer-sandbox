@@ -41,8 +41,8 @@ const Dashboard = () => {
     try {
       const data = await groupsAPI.getGroups();
       console.log('Groups API response:', data); // Debug log
-      // Handle the actual API response structure: { groups: [...], totalCount: number }
-      const groupsArray = data?.groups || [];
+      // Handle the actual API response structure: { meta: {...}, results: [...] }
+      const groupsArray = data?.results || [];
       setGroups(groupsArray);
     } catch (err) {
       setError('Failed to fetch groups');
@@ -59,10 +59,10 @@ const Dashboard = () => {
     try {
       const data = await addressesAPI.getAddresses(groupUuid);
       console.log('Addresses API response:', data); // Debug log
-      console.log('Addresses array:', data?.addresses); // Debug log
-      console.log('Total count:', data?.totalCount); // Debug log
-      // Handle the actual API response structure: { addresses: [...], totalCount: number }
-      const addressesArray = data?.addresses || [];
+      console.log('Addresses array:', data?.results); // Debug log
+      console.log('Total count:', data?.meta?.total); // Debug log
+      // Handle the actual API response structure: { meta: {...}, results: [...] }
+      const addressesArray = data?.results || [];
       console.log('Processed addresses array:', addressesArray); // Debug log
       setAddresses(addressesArray);
       setDevices({
@@ -90,13 +90,13 @@ const Dashboard = () => {
     try {
       // Fetch all device types in parallel
       const [
-        vehicles,
-        chargers,
-        solarInverters,
-        smartMeters,
-        hvacs,
-        batteries,
-        gridConnections
+        vehiclesData,
+        chargersData,
+        solarInvertersData,
+        smartMetersData,
+        hvacsData,
+        batteriesData,
+        gridConnectionsData
       ] = await Promise.all([
         devicesAPI.getVehicles(addressUuid),
         devicesAPI.getChargers(addressUuid),
@@ -108,23 +108,26 @@ const Dashboard = () => {
       ]);
 
       console.log('Devices API responses:', {
-        vehicles,
-        chargers,
-        solarInverters,
-        smartMeters,
-        hvacs,
-        batteries,
-        gridConnections
+        vehiclesData,
+        chargersData,
+        solarInvertersData,
+        smartMetersData,
+        hvacsData,
+        batteriesData,
+        gridConnectionsData
       });
 
+      // Extract results from each API response (handle both { results: [...] } and direct array)
+      const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
+
       setDevices({
-        vehicles: Array.isArray(vehicles) ? vehicles : [],
-        chargers: Array.isArray(chargers) ? chargers : [],
-        solarInverters: Array.isArray(solarInverters) ? solarInverters : [],
-        smartMeters: Array.isArray(smartMeters) ? smartMeters : [],
-        hvacs: Array.isArray(hvacs) ? hvacs : [],
-        batteries: Array.isArray(batteries) ? batteries : [],
-        gridConnections: Array.isArray(gridConnections) ? gridConnections : []
+        vehicles: extractResults(vehiclesData),
+        chargers: extractResults(chargersData),
+        solarInverters: extractResults(solarInvertersData),
+        smartMeters: extractResults(smartMetersData),
+        hvacs: extractResults(hvacsData),
+        batteries: extractResults(batteriesData),
+        gridConnections: extractResults(gridConnectionsData)
       });
     } catch (err) {
       setError('Failed to fetch devices');
@@ -194,7 +197,7 @@ const Dashboard = () => {
         });
       } else {
         // Query address devices
-        const [vehicles, chargers, solarInverters, smartMeters, hvacs, batteries, gridConnections] = await Promise.all([
+        const [vehiclesData, chargersData, solarInvertersData, smartMetersData, hvacsData, batteriesData, gridConnectionsData] = await Promise.all([
           devicesAPI.getVehicles(query),
           devicesAPI.getChargers(query),
           devicesAPI.getSolarInverters(query),
@@ -204,16 +207,19 @@ const Dashboard = () => {
           devicesAPI.getGridConnections(query)
         ]);
         
+        // Extract results from each API response (handle both { results: [...] } and direct array)
+        const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
+        
         setAdminQueryResult({
           type: 'address',
           data: {
-            vehicles,
-            chargers,
-            solarInverters,
-            smartMeters,
-            hvacs,
-            batteries,
-            gridConnections
+            vehicles: extractResults(vehiclesData),
+            chargers: extractResults(chargersData),
+            solarInverters: extractResults(solarInvertersData),
+            smartMeters: extractResults(smartMetersData),
+            hvacs: extractResults(hvacsData),
+            batteries: extractResults(batteriesData),
+            gridConnections: extractResults(gridConnectionsData)
           }
         });
       }
