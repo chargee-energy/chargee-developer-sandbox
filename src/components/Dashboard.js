@@ -34,6 +34,8 @@ const Dashboard = () => {
   const [addressSearch, setAddressSearch] = useState('');
   const [addressPage, setAddressPage] = useState(1);
   const addressesPerPage = 20;
+  const [jsonModalOpen, setJsonModalOpen] = useState(false);
+  const [selectedDeviceJson, setSelectedDeviceJson] = useState(null);
 
   // Fetch groups on mount
   useEffect(() => {
@@ -222,6 +224,28 @@ const Dashboard = () => {
     }
   };
 
+  const handleViewDeviceJson = (device) => {
+    setSelectedDeviceJson(device);
+    setJsonModalOpen(true);
+  };
+
+  const handleCloseJsonModal = () => {
+    setJsonModalOpen(false);
+    setSelectedDeviceJson(null);
+  };
+
+  const handleCopyJson = () => {
+    if (selectedDeviceJson) {
+      const jsonString = JSON.stringify(selectedDeviceJson, null, 2);
+      navigator.clipboard.writeText(jsonString).then(() => {
+        // Optional: show a brief success message
+        alert('JSON copied to clipboard!');
+      }).catch(err => {
+        console.error('Failed to copy JSON:', err);
+      });
+    }
+  };
+
   const handleAdminQuery = async () => {
     if (!adminQuery.trim()) return;
     
@@ -392,8 +416,20 @@ const Dashboard = () => {
                                 {adminQueryResult.data.vehicles.map((vehicle) => (
                                   <div key={vehicle.identifier} className="device-card vehicle-card">
                                     <div className="device-header">
-                                      <span className="device-brand">{vehicle.info.brand}</span>
-                                      <span className="device-model">{vehicle.info.model}</span>
+                                      <div>
+                                        <span className="device-brand">{vehicle.info.brand}</span>
+                                        <span className="device-model">{vehicle.info.model}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(vehicle);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -425,8 +461,20 @@ const Dashboard = () => {
                                 {adminQueryResult.data.chargers.map((charger) => (
                                   <div key={charger.identifier} className="device-card charger-card">
                                     <div className="device-header">
-                                      <span className="device-brand">{charger.brand}</span>
-                                      <span className="device-model">{charger.model}</span>
+                                      <div>
+                                        <span className="device-brand">{charger.brand}</span>
+                                        <span className="device-model">{charger.model}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(charger);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -452,8 +500,20 @@ const Dashboard = () => {
                                 {adminQueryResult.data.solarInverters.map((inverter) => (
                                   <div key={inverter.identifier} className="device-card solar-card">
                                     <div className="device-header">
-                                      <span className="device-brand">{inverter.brand}</span>
-                                      <span className="device-model">{inverter.model}</span>
+                                      <div>
+                                        <span className="device-brand">{inverter.brand}</span>
+                                        <span className="device-model">{inverter.model}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(inverter);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -485,7 +545,19 @@ const Dashboard = () => {
                                 {adminQueryResult.data.smartMeters.map((meter) => (
                                   <div key={meter.identifier} className="device-card meter-card">
                                     <div className="device-header">
-                                      <span className="device-brand">{meter.smartMeterType}</span>
+                                      <div>
+                                        <span className="device-brand">{meter.smartMeterType}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(meter);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -513,8 +585,20 @@ const Dashboard = () => {
                                 {adminQueryResult.data.hvacs.map((hvac) => (
                                   <div key={hvac.identifier} className="device-card hvac-card">
                                     <div className="device-header">
-                                      <span className="device-brand">{hvac.brand}</span>
-                                      <span className="device-model">{hvac.model}</span>
+                                      <div>
+                                        <span className="device-brand">{hvac.brand}</span>
+                                        <span className="device-model">{hvac.model}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(hvac);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -546,8 +630,20 @@ const Dashboard = () => {
                                 {adminQueryResult.data.batteries.map((battery) => (
                                   <div key={battery.identifier} className="device-card battery-card">
                                     <div className="device-header">
-                                      <span className="device-brand">{battery.brand}</span>
-                                      <span className="device-model">{battery.model}</span>
+                                      <div>
+                                        <span className="device-brand">{battery.brand}</span>
+                                        <span className="device-model">{battery.model}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(battery);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -575,8 +671,20 @@ const Dashboard = () => {
                                 {adminQueryResult.data.gridConnections.map((connection) => (
                                   <div key={connection.identifier} className="device-card grid-card">
                                     <div className="device-header">
-                                      <span className="device-brand">Grid Connection</span>
-                                      <span className="device-model">Type {connection.type}</span>
+                                      <div>
+                                        <span className="device-brand">Grid Connection</span>
+                                        <span className="device-model">Type {connection.type}</span>
+                                      </div>
+                                      <button 
+                                        className="json-button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewDeviceJson(connection);
+                                        }}
+                                        title="View JSON"
+                                      >
+                                        📄
+                                      </button>
                                     </div>
                                     <div className="device-details">
                                       <div className="detail-item">
@@ -750,8 +858,20 @@ const Dashboard = () => {
                       {devices.vehicles.map((vehicle) => (
                         <div key={vehicle.identifier} className="device-card vehicle-card">
                           <div className="device-header">
-                            <span className="device-brand">{vehicle.info.brand}</span>
-                            <span className="device-model">{vehicle.info.model}</span>
+                            <div>
+                              <span className="device-brand">{vehicle.info.brand}</span>
+                              <span className="device-model">{vehicle.info.model}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(vehicle);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -783,8 +903,20 @@ const Dashboard = () => {
                       {devices.chargers.map((charger) => (
                         <div key={charger.identifier} className="device-card charger-card">
                           <div className="device-header">
-                            <span className="device-brand">{charger.brand}</span>
-                            <span className="device-model">{charger.model}</span>
+                            <div>
+                              <span className="device-brand">{charger.brand}</span>
+                              <span className="device-model">{charger.model}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(charger);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -810,8 +942,20 @@ const Dashboard = () => {
                       {devices.solarInverters.map((inverter) => (
                         <div key={inverter.identifier} className="device-card solar-card">
                           <div className="device-header">
-                            <span className="device-brand">{inverter.brand}</span>
-                            <span className="device-model">{inverter.model}</span>
+                            <div>
+                              <span className="device-brand">{inverter.brand}</span>
+                              <span className="device-model">{inverter.model}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(inverter);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -843,7 +987,19 @@ const Dashboard = () => {
                       {devices.smartMeters.map((meter) => (
                         <div key={meter.identifier} className="device-card meter-card">
                           <div className="device-header">
-                            <span className="device-brand">{meter.smartMeterType}</span>
+                            <div>
+                              <span className="device-brand">{meter.smartMeterType}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(meter);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -871,8 +1027,20 @@ const Dashboard = () => {
                       {devices.hvacs.map((hvac) => (
                         <div key={hvac.identifier} className="device-card hvac-card">
                           <div className="device-header">
-                            <span className="device-brand">{hvac.brand}</span>
-                            <span className="device-model">{hvac.model}</span>
+                            <div>
+                              <span className="device-brand">{hvac.brand}</span>
+                              <span className="device-model">{hvac.model}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(hvac);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -904,8 +1072,20 @@ const Dashboard = () => {
                       {devices.batteries.map((battery) => (
                         <div key={battery.identifier} className="device-card battery-card">
                           <div className="device-header">
-                            <span className="device-brand">{battery.brand}</span>
-                            <span className="device-model">{battery.model}</span>
+                            <div>
+                              <span className="device-brand">{battery.brand}</span>
+                              <span className="device-model">{battery.model}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(battery);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -933,8 +1113,20 @@ const Dashboard = () => {
                       {devices.gridConnections.map((connection) => (
                         <div key={connection.identifier} className="device-card grid-card">
                           <div className="device-header">
-                            <span className="device-brand">Grid Connection</span>
-                            <span className="device-model">Type {connection.type}</span>
+                            <div>
+                              <span className="device-brand">Grid Connection</span>
+                              <span className="device-model">Type {connection.type}</span>
+                            </div>
+                            <button 
+                              className="json-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDeviceJson(connection);
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
                           </div>
                           <div className="device-details">
                             <div className="detail-item">
@@ -965,6 +1157,38 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* JSON Modal */}
+      {jsonModalOpen && selectedDeviceJson && (
+        <div className="json-modal-overlay" onClick={handleCloseJsonModal}>
+          <div className="json-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="json-modal-header">
+              <h3>Device JSON Data</h3>
+              <div className="json-modal-actions">
+                <button 
+                  className="copy-json-button"
+                  onClick={handleCopyJson}
+                  title="Copy JSON to clipboard"
+                >
+                  📋 Copy
+                </button>
+                <button 
+                  className="close-json-button"
+                  onClick={handleCloseJsonModal}
+                  title="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="json-modal-content">
+              <pre className="json-display">
+                <code>{JSON.stringify(selectedDeviceJson, null, 2)}</code>
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
