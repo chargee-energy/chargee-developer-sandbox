@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { sparkyAPI } from '../services/api';
+import { sparkyAPI, devicesAPI } from '../services/api';
 import EnergyGraph from './EnergyGraph';
+import ForecastGraph from './ForecastGraph';
 import './SparkyDetails.css';
 
 const SparkyDetails = () => {
@@ -25,6 +26,11 @@ const SparkyDetails = () => {
     return new Date().toISOString().split('T')[0];
   });
   
+  const [selectedForecastDate, setSelectedForecastDate] = useState(() => {
+    // Default to today's date in YYYY-MM-DD format for forecasts
+    return new Date().toISOString().split('T')[0];
+  });
+  
   const [loading, setLoading] = useState({
     details: false,
     access: false,
@@ -34,7 +40,19 @@ const SparkyDetails = () => {
     electricity15min: false,
     gas15min: false,
     total15min: false,
+    smartMeters: false,
+    deliveryForecast: false,
+    returnForecast: false,
   });
+  
+  const [smartMeters, setSmartMeters] = useState([]);
+  const [selectedSmartMeter, setSelectedSmartMeter] = useState(null);
+  const [forecastData, setForecastData] = useState({
+    deliveryForecast: null,
+    returnForecast: null,
+  });
+  
+  const [show15minOnForecast, setShow15minOnForecast] = useState(false);
   
   const [error, setError] = useState('');
 
@@ -75,6 +93,58 @@ const SparkyDetails = () => {
     }
   };
 
+  // Fetch smart meters when address is available
+  const fetchSmartMeters = useCallback(async () => {
+    if (!address?.uuid) {
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, smartMeters: true }));
+    try {
+      const data = await devicesAPI.getSmartMeters(address.uuid);
+      const meters = Array.isArray(data) ? data : (data?.results || []);
+      setSmartMeters(meters);
+      // Only set selected smart meter if none is selected
+      // Use identifier field as the smart meter UUID
+      if (meters.length > 0) {
+        setSelectedSmartMeter(prev => prev || meters[0].identifier);
+      }
+    } catch (err) {
+      console.error('Error fetching smart meters:', err);
+    } finally {
+      setLoading(prev => ({ ...prev, smartMeters: false }));
+    }
+  }, [address?.uuid]);
+
+  // Fetch forecasts when smart meter is selected
+  const fetchForecasts = useCallback(async () => {
+    if (!address?.uuid || !selectedSmartMeter || !selectedForecastDate) {
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, deliveryForecast: true, returnForecast: true }));
+    try {
+      const [deliveryData, returnData] = await Promise.all([
+        devicesAPI.getSmartMeterDeliveryForecast(address.uuid, selectedSmartMeter, selectedForecastDate),
+        devicesAPI.getSmartMeterReturnForecast(address.uuid, selectedSmartMeter, selectedForecastDate),
+      ]);
+      console.log('Delivery forecast response:', deliveryData);
+      console.log('Return forecast response:', returnData);
+      setForecastData({
+        deliveryForecast: deliveryData || null,
+        returnForecast: returnData || null,
+      });
+    } catch (err) {
+      console.error('Error fetching forecasts:', err);
+      setForecastData({
+        deliveryForecast: null,
+        returnForecast: null,
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, deliveryForecast: false, returnForecast: false }));
+    }
+  }, [address?.uuid, selectedSmartMeter, selectedForecastDate]);
+
   useEffect(() => {
     if (sparky?.serialNumber) {
       fetchSparkyData();
@@ -82,6 +152,26 @@ const SparkyDetails = () => {
       setError('No Sparky information available');
     }
   }, [sparky?.serialNumber, fetchSparkyData]);
+
+  useEffect(() => {
+    if (address?.uuid) {
+      fetchSmartMeters();
+    }
+  }, [address?.uuid, fetchSmartMeters]);
+
+  useEffect(() => {
+    if (address?.uuid && selectedSmartMeter && selectedForecastDate) {
+      fetchForecasts();
+    }
+  }, [address?.uuid, selectedSmartMeter, selectedForecastDate, fetchForecasts]);
+
+  // When forecast date changes, also fetch 15min data for that date
+  useEffect(() => {
+    if (sparky?.serialNumber && selectedForecastDate) {
+      // Fetch 15min data for the forecast date
+      fetchData('electricity15min', () => sparkyAPI.getElectricity15min(sparky.serialNumber, selectedForecastDate));
+    }
+  }, [sparky?.serialNumber, selectedForecastDate]);
 
   const handleBackToDashboard = () => {
     // Use browser history to go back, which preserves the previous state
@@ -177,6 +267,128 @@ const SparkyDetails = () => {
 
         {/* Real-time Energy Graph */}
         <EnergyGraph sparkySerialNumber={sparky.serialNumber} />
+
+        {/* Smart Meter Forecast Section */}
+        {address?.uuid && (
+          <div className="data-sections">
+            <div className="section-header">
+              <h2>Smart Meter Forecasts</h2>
+              <div className="header-controls">
+                {loading.smartMeters ? (
+                  <div className="loading">Loading smart meters...</div>
+                ) : smartMeters.length > 0 ? (
+                  <div className="smart-meter-controls-group">
+                    <div className="smart-meter-selector">
+                      <div className="date-picker">
+                        <label htmlFor="forecast-date-picker">
+                          <span className="label-icon">📅</span>
+                          Date for forecast:
+                        </label>
+                        <input
+                          id="forecast-date-picker"
+                          type="date"
+                          value={selectedForecastDate}
+                          onChange={(e) => {
+                            const newDate = e.target.value;
+                            setSelectedForecastDate(newDate);
+                            // Also update the 15min data date to match
+                            setSelectedDate(newDate);
+                          }}
+                          className="date-input"
+                        />
+                      </div>
+                      <div className="select-wrapper">
+                        <label htmlFor="smart-meter-select">
+                          <span className="label-icon">⚡</span>
+                          Select Smart Meter:
+                        </label>
+                        <div className="custom-select-container">
+                          <select
+                            id="smart-meter-select"
+                            value={selectedSmartMeter || ''}
+                            onChange={(e) => setSelectedSmartMeter(e.target.value)}
+                            className="smart-meter-select"
+                          >
+                            {smartMeters.map((meter) => (
+                              <option key={meter.identifier || meter.uuid} value={meter.identifier}>
+                                {meter.smartMeterType || meter.name || meter.identifier || meter.uuid}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="select-arrow">▼</span>
+                        </div>
+                      </div>
+                      <div className="button-wrapper">
+                        <label className="button-label-spacer"></label>
+                        <button
+                          onClick={fetchForecasts}
+                          className="refresh-button"
+                          disabled={loading.deliveryForecast || loading.returnForecast}
+                        >
+                          <span className="button-icon">
+                            {loading.deliveryForecast || loading.returnForecast ? '⏳' : '🔄'}
+                          </span>
+                          {loading.deliveryForecast || loading.returnForecast ? 'Loading...' : 'Refresh Forecasts'}
+                        </button>
+                      </div>
+                      {selectedForecastDate === selectedDate && sparkyData.electricity15min && (
+                        <div className="toggle-wrapper">
+                          <label className="button-label-spacer"></label>
+                          <label className="toggle-15min">
+                            <input
+                              type="checkbox"
+                              checked={show15minOnForecast}
+                              onChange={(e) => setShow15minOnForecast(e.target.checked)}
+                              className="toggle-input"
+                            />
+                            <span className="toggle-switch"></span>
+                            <span className="toggle-label">
+                              <span className="toggle-icon">📊</span>
+                              <span className="toggle-text">Show 15min actual data</span>
+                            </span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="no-data">No smart meters available for this address</div>
+                )}
+              </div>
+            </div>
+
+            {selectedSmartMeter && (
+              <>
+                {/* Forecast Graph */}
+                {(forecastData.deliveryForecast || forecastData.returnForecast) && (
+                  <ForecastGraph
+                    deliveryForecast={forecastData.deliveryForecast}
+                    returnForecast={forecastData.returnForecast}
+                    date={selectedForecastDate}
+                    electricity15min={selectedForecastDate === selectedDate ? sparkyData.electricity15min : null}
+                    show15minData={show15minOnForecast && selectedForecastDate === selectedDate}
+                  />
+                )}
+                
+                {/* Forecast Data Sections */}
+                <div className="data-grid">
+                  {renderDataSection(
+                    'Delivery Forecast',
+                    forecastData.deliveryForecast,
+                    'deliveryForecast',
+                    'deliveryForecast'
+                  )}
+                  {renderDataSection(
+                    'Return Forecast',
+                    forecastData.returnForecast,
+                    'returnForecast',
+                    'returnForecast'
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Sparky Data Sections */}
         <div className="data-sections">

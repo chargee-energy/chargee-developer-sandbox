@@ -95,6 +95,18 @@ export const devicesAPI = {
     const response = await api.get(`/addresses/${addressUuid}/grid-connections`);
     return response.data;
   },
+  getSmartMeterDeliveryForecast: async (addressUuid, smartMeterUuid, date) => {
+    const response = await api.get(`/addresses/${addressUuid}/smart-meters/${smartMeterUuid}/delivery-forecast`, {
+      params: { date }
+    });
+    return response.data;
+  },
+  getSmartMeterReturnForecast: async (addressUuid, smartMeterUuid, date) => {
+    const response = await api.get(`/addresses/${addressUuid}/smart-meters/${smartMeterUuid}/return-forecast`, {
+      params: { date }
+    });
+    return response.data;
+  },
 };
 
 export const sparkyAPI = {
