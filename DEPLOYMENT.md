@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying the Chargee Developer Sandbox to various cloud platforms.
+This guide covers deploying the Chargee Developer Playground to various cloud platforms.
 
 ## 🚀 Heroku Deployment
 
@@ -40,7 +40,7 @@ This guide covers deploying the Chargee Developer Sandbox to various cloud platf
 
 Use the included `app.json` for one-click deployment:
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/chargee-energy/chargee-developer-sandbox)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/chargee-energy/chargee-developer-playground)
 
 ### Important: Memory Optimization & Routing
 
@@ -54,9 +54,9 @@ Create `app.json` for one-click deployment:
 
 ```json
 {
-  "name": "Chargee Developer Sandbox",
+  "name": "Chargee Developer Playground",
   "description": "React frontend for Ampere API integration",
-  "repository": "https://github.com/chargee-energy/chargee-developer-sandbox",
+  "repository": "https://github.com/chargee-energy/chargee-developer-playground",
   "logo": "https://www.chargee.energy/images/chargee-icon.svg",
   "keywords": ["react", "energy", "api", "chargee"],
   "env": {
@@ -85,7 +85,7 @@ Create `app.json` for one-click deployment:
    - Go to Coolify dashboard
    - Click "New Project"
    - Select "Git Repository"
-   - Enter repository URL: `https://github.com/chargee/chargee-developer-sandbox`
+   - Enter repository URL: `https://github.com/chargee/chargee-developer-playground`
 
 2. **Configure Environment**
    - Set `REACT_APP_AMPERE_API_URL=https://ampere.prod.thunder.chargee.io/api/v2`
@@ -136,20 +136,20 @@ The included `docker-compose.yml` works out of the box with Coolify.
 1. **Build and Push Image**
    ```bash
    # Create ECR repository
-   aws ecr create-repository --repository-name chargee-sandbox
+   aws ecr create-repository --repository-name chargee-playground
    
    # Build and tag image
-   docker build -t chargee-sandbox .
-   docker tag chargee-sandbox:latest YOUR_ACCOUNT.dkr.ecr.REGION.amazonaws.com/chargee-sandbox:latest
+   docker build -t chargee-playground .
+   docker tag chargee-playground:latest YOUR_ACCOUNT.dkr.ecr.REGION.amazonaws.com/chargee-playground:latest
    
    # Push to ECR
-   docker push YOUR_ACCOUNT.dkr.ecr.REGION.amazonaws.com/chargee-sandbox:latest
+   docker push YOUR_ACCOUNT.dkr.ecr.REGION.amazonaws.com/chargee-playground:latest
    ```
 
 2. **Create Task Definition**
    ```json
    {
-     "family": "chargee-sandbox",
+     "family": "chargee-playground",
      "networkMode": "awsvpc",
      "requiresCompatibilities": ["FARGATE"],
      "cpu": "256",
@@ -157,8 +157,8 @@ The included `docker-compose.yml` works out of the box with Coolify.
      "executionRoleArn": "arn:aws:iam::ACCOUNT:role/ecsTaskExecutionRole",
      "containerDefinitions": [
        {
-         "name": "chargee-sandbox",
-         "image": "YOUR_ACCOUNT.dkr.ecr.REGION.amazonaws.com/chargee-sandbox:latest",
+         "name": "chargee-playground",
+         "image": "YOUR_ACCOUNT.dkr.ecr.REGION.amazonaws.com/chargee-playground:latest",
          "portMappings": [
            {
              "containerPort": 80,
@@ -174,7 +174,7 @@ The included `docker-compose.yml` works out of the box with Coolify.
          "logConfiguration": {
            "logDriver": "awslogs",
            "options": {
-             "awslogs-group": "/ecs/chargee-sandbox",
+             "awslogs-group": "/ecs/chargee-playground",
              "awslogs-region": "eu-west-1",
              "awslogs-stream-prefix": "ecs"
            }
@@ -207,8 +207,8 @@ The included `docker-compose.yml` works out of the box with Coolify.
 3. **Deploy Application**
    ```bash
    # Clone repository
-   git clone https://github.com/chargee/chargee-developer-sandbox.git
-   cd chargee-developer-sandbox
+   git clone https://github.com/chargee/chargee-developer-playground.git
+   cd chargee-developer-playground
    
    # Set environment variables
    export REACT_APP_AMPERE_API_URL=https://ampere.prod.thunder.chargee.io/api/v2
@@ -269,5 +269,5 @@ The application includes health check endpoints:
 ### Support
 
 For deployment issues:
-- Check the [GitHub Issues](https://github.com/chargee/chargee-developer-sandbox/issues)
+- Check the [GitHub Issues](https://github.com/chargee/chargee-developer-playground/issues)
 - Contact support@chargee.energy

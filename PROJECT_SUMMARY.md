@@ -64,4 +64,4 @@ Users can get help through:
 
 ---
 
-**The Chargee Developer Sandbox is now ready to help developers integrate with the Ampere API! 🎉**
+**The Chargee Developer Playground is now ready to help developers integrate with the Ampere API! 🎉**

@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  chargee-sandbox:
+  chargee-playground:
     build:
       context: .
       dockerfile: Dockerfile
@@ -27,7 +27,7 @@ services:
       - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
-      - chargee-sandbox
+      - chargee-playground
     restart: unless-stopped
     profiles:
       - production

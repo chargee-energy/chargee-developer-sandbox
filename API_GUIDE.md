@@ -395,7 +395,7 @@ const useApiData = (apiFunction, dependencies = []) => {
 export const config = {
   apiUrl: process.env.REACT_APP_AMPERE_API_URL || 'https://ampere.prod.thunder.chargee.io/api/v2',
   debug: process.env.REACT_APP_DEBUG === 'true',
-  appTitle: process.env.REACT_APP_APP_TITLE || 'Chargee Developer Sandbox',
+  appTitle: process.env.REACT_APP_APP_TITLE || 'Chargee Developer Playground',
   primaryColor: process.env.REACT_APP_PRIMARY_COLOR || '#00BFA5',
   secondaryColor: process.env.REACT_APP_SECONDARY_COLOR || '#1976D2',
 };

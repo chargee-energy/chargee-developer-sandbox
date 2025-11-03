@@ -1,7 +1,7 @@
 {
-  "name": "Chargee Developer Sandbox",
+  "name": "Chargee Developer Playground",
   "description": "React frontend for Ampere API integration",
-  "repository": "https://github.com/chargee-energy/chargee-developer-sandbox",
+  "repository": "https://github.com/chargee-energy/chargee-developer-playground",
   "logo": "https://www.chargee.energy/images/chargee-icon.svg",
   "keywords": ["react", "energy", "api", "chargee"],
   "env": {

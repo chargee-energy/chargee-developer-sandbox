@@ -1,8 +1,8 @@
-# Chargee Developer Sandbox
+# Chargee Developer Playground
 
 A React frontend application demonstrating how to integrate with the Ampere API. This project showcases authentication, real-time energy monitoring, and device management capabilities.
 
-![Chargee Developer Sandbox](https://img.shields.io/badge/React-18.2.0-blue.svg)
+![Chargee Developer Playground](https://img.shields.io/badge/React-18.2.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
 
@@ -28,8 +28,8 @@ A React frontend application demonstrating how to integrate with the Ampere API.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/chargee/chargee-developer-sandbox.git
-   cd chargee-developer-sandbox
+   git clone https://github.com/chargee/chargee-developer-playground.git
+   cd chargee-developer-playground
    ```
 
 2. **Install dependencies**
@@ -49,8 +49,8 @@ A React frontend application demonstrating how to integrate with the Ampere API.
 
 1. **Clone and run with Docker Compose**
    ```bash
-   git clone https://github.com/chargee/chargee-developer-sandbox.git
-   cd chargee-developer-sandbox
+   git clone https://github.com/chargee/chargee-developer-playground.git
+   cd chargee-developer-playground
    docker-compose up -d
    ```
 
@@ -160,9 +160,9 @@ const netPower = (data.power_returned - data.power_delivered) * 1000; // Convert
 
 1. **Build and push Docker image**
    ```bash
-   docker build -t chargee-sandbox .
-   docker tag chargee-sandbox:latest your-ecr-repo/chargee-sandbox:latest
-   docker push your-ecr-repo/chargee-sandbox:latest
+   docker build -t chargee-playground .
+   docker tag chargee-playground:latest your-ecr-repo/chargee-playground:latest
+   docker push your-ecr-repo/chargee-playground:latest
    ```
 
 2. **Deploy using ECS** with the provided task definition
@@ -226,7 +226,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 - **Documentation**: [Ampere API Docs](https://ampere.prod.thunder.chargee.io/api/v2#/)
-- **Issues**: [GitHub Issues](https://github.com/chargee/chargee-developer-sandbox/issues)
+- **Issues**: [GitHub Issues](https://github.com/chargee/chargee-developer-playground/issues)
 - **Email**: support@chargee.energy
 
 ## 🙏 Acknowledgments

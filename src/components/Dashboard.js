@@ -325,7 +325,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <ChargeeLogo size="medium" className="dashboard-logo" />
-          <h1>Chargee Developer Sandbox</h1>
+          <h1>Chargee Developer Playground</h1>
           <div className="user-info">
             <div className="user-details">
               <span>Welcome, {user?.email || 'User'}</span>
