@@ -443,7 +443,12 @@ const Dashboard = () => {
                                       {vehicle.lastChargeState && (
                                         <div className="detail-item">
                                           <span className="label">Battery:</span>
-                                          <span className="value">{vehicle.lastChargeState.batteryLevel}%</span>
+                                          <span className="value">
+                                            {typeof vehicle.lastChargeState.batteryLevel === 'object' 
+                                              ? (vehicle.lastChargeState.batteryLevel?.percent || 0)
+                                              : (vehicle.lastChargeState.batteryLevel || 0)
+                                            }%
+                                          </span>
                                         </div>
                                       )}
                                     </div>
@@ -650,10 +655,10 @@ const Dashboard = () => {
                                         <span className="label">Site:</span>
                                         <span className="value">{battery.siteName}</span>
                                       </div>
-                                      {battery.lastChargeState && (
+                                      {battery.lastChargeState && battery.lastChargeState.batteryLevel && (
                                         <div className="detail-item">
                                           <span className="label">Level:</span>
-                                          <span className="value">{battery.lastChargeState.batteryLevel}%</span>
+                                          <span className="value">{battery.lastChargeState.batteryLevel.percent || 0}%</span>
                                         </div>
                                       )}
                                     </div>
@@ -1092,10 +1097,10 @@ const Dashboard = () => {
                               <span className="label">Site:</span>
                               <span className="value">{battery.siteName}</span>
                             </div>
-                            {battery.lastChargeState && (
+                            {battery.lastChargeState && battery.lastChargeState.batteryLevel && (
                               <div className="detail-item">
                                 <span className="label">Level:</span>
-                                <span className="value">{battery.lastChargeState.batteryLevel}%</span>
+                                <span className="value">{battery.lastChargeState.batteryLevel.percent || 0}%</span>
                               </div>
                             )}
                           </div>
