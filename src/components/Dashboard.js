@@ -44,48 +44,23 @@ const Dashboard = () => {
     fetchGroups();
   }, []);
 
-  // Restore selection from URL after groups load
+  // Restore selection from URL after groups load, or auto-select if only 1 group
   useEffect(() => {
-    const groupUuid = searchParams.get('group');
+    if (groups.length === 0 || selectedGroup) return;
     
-    if (groupUuid && groups.length > 0 && !selectedGroup) {
+    // If there's exactly 1 group, always select it
+    if (groups.length === 1) {
+      const group = groups[0];
+      handleGroupSelect(group);
+      return;
+    }
+    
+    // Otherwise, restore from URL params (previously selected group)
+    const groupUuid = searchParams.get('group');
+    if (groupUuid) {
       const group = groups.find(g => g.uuid === groupUuid);
       if (group) {
-        setSelectedGroup(group);
-        fetchAddresses(group.uuid, 1);
-        
-        // Only fetch analytics if user has extendeduser or admin role
-        if (user?.role === 'extendeduser' || user?.role === 'admin') {
-          // Check for cached analytics first
-          const analyticsCacheKey = `analytics_${group.uuid}`;
-          const cachedAnalytics = localStorage.getItem(analyticsCacheKey);
-          if (cachedAnalytics) {
-            try {
-              const parsed = JSON.parse(cachedAnalytics);
-              // Check if cache is less than 1 hour old
-              const cacheAge = Date.now() - parsed.timestamp;
-              const oneHour = 60 * 60 * 1000;
-              if (cacheAge < oneHour) {
-                setAnalytics(parsed.data);
-              } else {
-                // Cache expired, fetch fresh data
-                fetchGroupAnalytics(group.uuid);
-              }
-            } catch (err) {
-              console.error('Error parsing cached analytics:', err);
-              fetchGroupAnalytics(group.uuid);
-            }
-          } else {
-            // No cache, fetch fresh data
-            fetchGroupAnalytics(group.uuid);
-          }
-        } else {
-          // User doesn't have permission, clear analytics
-          setAnalytics(null);
-        }
-        
-        // Fetch addresses (will check cache internally)
-        fetchAddresses(group.uuid, 1);
+        handleGroupSelect(group);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1302,29 +1277,29 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="dashboard-grid">
-          {/* Groups Section */}
-          <div className="section">
+        {/* Groups Section - Full Width */}
+        <div className="section section-full-width">
+          <div className="section-header">
             <h2>Groups</h2>
-            {loading.groups ? (
-              <div className="loading">Loading groups...</div>
-            ) : Array.isArray(groups) && groups.length > 0 ? (
-              <div className="list">
-                {groups.map((group) => (
-                  <div
-                    key={group.uuid}
-                    className={`list-item ${selectedGroup?.uuid === group.uuid ? 'selected' : ''}`}
-                    onClick={() => handleGroupSelect(group)}
-                  >
-                    <div className="item-title">{group.name}</div>
-                    <div className="item-subtitle uuid">{group.uuid}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="placeholder">No groups found</div>
-            )}
           </div>
+          {loading.groups ? (
+            <div className="loading">Loading groups...</div>
+          ) : Array.isArray(groups) && groups.length > 0 ? (
+            <div className="list">
+              {groups.map((group) => (
+                <div
+                  key={group.uuid}
+                  className={`list-item ${selectedGroup?.uuid === group.uuid ? 'selected' : ''}`}
+                  onClick={() => handleGroupSelect(group)}
+                >
+                  <div className="item-title">{group.name}</div>
+                  <div className="item-subtitle uuid">{group.uuid}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="placeholder">No groups found</div>
+          )}
         </div>
 
         {/* Group Analytics Section - Full Width */}

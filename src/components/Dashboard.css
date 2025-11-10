@@ -523,10 +523,13 @@
 
 .analytics-label {
   color: var(--chargee-gray-600);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
 }
 
 .analytics-value {
