@@ -107,6 +107,18 @@ export const devicesAPI = {
     });
     return response.data;
   },
+  getSolarInverterProductionForecast: async (addressUuid, solarInverterUuid, date) => {
+    const response = await api.get(`/addresses/${addressUuid}/solar-inverters/${solarInverterUuid}/production-forecast`, {
+      params: { date }
+    });
+    return response.data;
+  },
+  getSolarInverterProduction: async (addressUuid, solarInverterUuid, fromDate, toDate, sortBy = 'ASC', limit = 100) => {
+    const response = await api.get(`/addresses/${addressUuid}/solar-inverters/${solarInverterUuid}/energy/production`, {
+      params: { fromDate, toDate, sortBy, limit }
+    });
+    return response.data;
+  },
 };
 
 export const sparkyAPI = {

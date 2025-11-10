@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { devicesAPI } from '../services/api';
+import ForecastGraph from './ForecastGraph';
 import './DevicesDetails.css';
 
 const DevicesDetails = () => {
@@ -26,6 +27,14 @@ const DevicesDetails = () => {
   const [deviceErrors, setDeviceErrors] = useState({});
   const [jsonModalOpen, setJsonModalOpen] = useState(false);
   const [selectedDeviceJson, setSelectedDeviceJson] = useState(null);
+  
+  // Production forecast state per inverter
+  const [productionForecasts, setProductionForecasts] = useState({});
+  const [productionData, setProductionData] = useState({});
+  const [forecastDates, setForecastDates] = useState({});
+  const [loadingForecasts, setLoadingForecasts] = useState({});
+  const [loadingProduction, setLoadingProduction] = useState({});
+  const [showActualProduction, setShowActualProduction] = useState({});
 
   useEffect(() => {
     if (address && group) {
@@ -118,6 +127,58 @@ const DevicesDetails = () => {
       }).catch(err => {
         console.error('Failed to copy JSON:', err);
       });
+    }
+  };
+
+  const fetchProductionForecast = async (inverterUuid, date) => {
+    if (!address || !inverterUuid || !date) return;
+    
+    setLoadingForecasts(prev => ({ ...prev, [inverterUuid]: true }));
+    try {
+      const forecast = await devicesAPI.getSolarInverterProductionForecast(
+        address.uuid,
+        inverterUuid,
+        date
+      );
+      setProductionForecasts(prev => ({ ...prev, [inverterUuid]: forecast }));
+    } catch (err) {
+      console.error('Error fetching production forecast:', err);
+      setProductionForecasts(prev => ({ ...prev, [inverterUuid]: null }));
+    } finally {
+      setLoadingForecasts(prev => ({ ...prev, [inverterUuid]: false }));
+    }
+  };
+
+  const handleForecastDateChange = (inverterUuid, date) => {
+    setForecastDates(prev => ({ ...prev, [inverterUuid]: date }));
+    fetchProductionForecast(inverterUuid, date);
+    // Also fetch actual production data for the selected date
+    fetchProductionData(inverterUuid, date);
+  };
+
+  const fetchProductionData = async (inverterUuid, date) => {
+    if (!address || !inverterUuid || !date) return;
+    
+    // Calculate fromDate and toDate for the selected date (full day)
+    const fromDate = new Date(date + 'T00:00:00.000Z').toISOString();
+    const toDate = new Date(date + 'T23:59:59.999Z').toISOString();
+    
+    setLoadingProduction(prev => ({ ...prev, [inverterUuid]: true }));
+    try {
+      const data = await devicesAPI.getSolarInverterProduction(
+        address.uuid,
+        inverterUuid,
+        fromDate,
+        toDate,
+        'ASC',
+        1000 // Increased limit to get all data points for the day
+      );
+      setProductionData(prev => ({ ...prev, [inverterUuid]: data }));
+    } catch (err) {
+      console.error('Error fetching production data:', err);
+      setProductionData(prev => ({ ...prev, [inverterUuid]: null }));
+    } finally {
+      setLoadingProduction(prev => ({ ...prev, [inverterUuid]: false }));
     }
   };
 
@@ -281,47 +342,135 @@ const DevicesDetails = () => {
               </div>
             )}
             {devices.solarInverters.length > 0 && (
-              <div className="device-category">
-                <h3>☀️ Solar Inverters ({devices.solarInverters.length})</h3>
-                <div className="device-list">
-                  {devices.solarInverters.map((inverter) => (
-                    <div key={inverter.identifier} className="device-card solar-card">
-                      <div className="device-header">
-                        <div>
-                          <span className="device-brand">{inverter.brand}</span>
-                          <span className="device-model">{inverter.model}</span>
-                        </div>
-                        <button 
-                          className="json-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDeviceJson(inverter);
-                          }}
-                          title="View JSON"
-                        >
-                          📄
-                        </button>
-                      </div>
-                      <div className="device-details">
-                        <div className="detail-item">
-                          <span className="label">Site:</span>
-                          <span className="value">{inverter.siteName}</span>
-                        </div>
-                        <div className="detail-item">
-                          <span className="label">Status:</span>
-                          <span className="value">{inverter.isReachable ? 'Online' : 'Offline'}</span>
-                        </div>
-                        {inverter.lastProductionState && (
-                          <div className="detail-item">
-                            <span className="label">Production:</span>
-                            <span className="value">{inverter.lastProductionState.productionRate}W</span>
+              <>
+                <div className="device-category">
+                  <h3>☀️ Solar Inverters ({devices.solarInverters.length})</h3>
+                  <div className="device-list">
+                    {devices.solarInverters.map((inverter) => (
+                      <div key={inverter.identifier} className="device-card solar-card">
+                        <div className="device-header">
+                          <div>
+                            <span className="device-brand">{inverter.brand}</span>
+                            <span className="device-model">{inverter.model}</span>
                           </div>
-                        )}
+                          <button 
+                            className="json-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDeviceJson(inverter);
+                            }}
+                            title="View JSON"
+                          >
+                            📄
+                          </button>
+                        </div>
+                        <div className="device-details">
+                          <div className="detail-item">
+                            <span className="label">Site:</span>
+                            <span className="value">{inverter.siteName}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="label">Status:</span>
+                            <span className="value">{inverter.isReachable ? 'Online' : 'Offline'}</span>
+                          </div>
+                          {inverter.lastProductionState && (
+                            <div className="detail-item">
+                              <span className="label">Production:</span>
+                              <span className="value">{inverter.lastProductionState.productionRate}W</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+                
+                {/* Production Forecast Section - Separate */}
+                <div className="device-category forecast-category">
+                  <h3>☀️ Production Forecasts</h3>
+                  <div className="forecast-list">
+                    {devices.solarInverters.map((inverter) => {
+                      const inverterUuid = inverter.identifier;
+                      const forecastDate = forecastDates[inverterUuid] || new Date().toISOString().split('T')[0];
+                      const forecast = productionForecasts[inverterUuid];
+                      const production = productionData[inverterUuid];
+                      const isLoadingForecast = loadingForecasts[inverterUuid];
+                      const isLoadingProduction = loadingProduction[inverterUuid];
+                      const showActual = showActualProduction[inverterUuid] || false;
+                      
+                      return (
+                        <div key={inverter.identifier} className="forecast-item">
+                          <div className="forecast-item-header">
+                            <div className="forecast-inverter-info">
+                              <span className="forecast-inverter-brand">{inverter.brand}</span>
+                              <span className="forecast-inverter-model">{inverter.model}</span>
+                              {inverter.siteName && (
+                                <span className="forecast-inverter-site"> - {inverter.siteName}</span>
+                              )}
+                            </div>
+                            <div className="forecast-controls">
+                              <div className="forecast-date-picker">
+                                <label htmlFor={`forecast-date-${inverterUuid}`}>Date:</label>
+                                <input
+                                  id={`forecast-date-${inverterUuid}`}
+                                  type="date"
+                                  value={forecastDate}
+                                  onChange={(e) => handleForecastDateChange(inverterUuid, e.target.value)}
+                                  className="forecast-date-input"
+                                />
+                              </div>
+                              <label className="forecast-toggle-label">
+                                <input
+                                  type="checkbox"
+                                  checked={showActual}
+                                  onChange={(e) => setShowActualProduction(prev => ({ ...prev, [inverterUuid]: e.target.checked }))}
+                                  className="forecast-toggle-checkbox"
+                                  disabled={!production || isLoadingProduction}
+                                />
+                                <span>Show actual production</span>
+                              </label>
+                              <button
+                                onClick={() => {
+                                  fetchProductionForecast(inverterUuid, forecastDate);
+                                  fetchProductionData(inverterUuid, forecastDate);
+                                }}
+                                disabled={isLoadingForecast || isLoadingProduction}
+                                className="refresh-forecast-button"
+                              >
+                                {(isLoadingForecast || isLoadingProduction) ? 'Loading...' : 'Refresh Forecast'}
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {(isLoadingForecast || isLoadingProduction) && (
+                            <div className="forecast-loading">Loading production data...</div>
+                          )}
+                          
+                          {forecast && !isLoadingForecast && (
+                            <div className="forecast-graph-wrapper">
+                              <ForecastGraph
+                                deliveryForecast={null}
+                                returnForecast={null}
+                                productionForecast={forecast}
+                                productionData={production}
+                                date={forecastDate}
+                                electricity15min={null}
+                                show15minData={showActual}
+                              />
+                            </div>
+                          )}
+                          
+                          {!forecast && !isLoadingForecast && forecastDate && (
+                            <div className="forecast-empty">
+                              No forecast data available. Click "Refresh Forecast" to load.
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Smart Meters */}

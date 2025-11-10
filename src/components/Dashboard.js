@@ -669,9 +669,11 @@ const Dashboard = () => {
         : 1;
 
       // Also fetch chargers, smart meters, and grid connections for completeness
-      let totalChargers = 0;
-      let totalSmartMeters = 0;
-      let totalGridConnections = 0;
+      const additionalCounters = {
+        chargers: 0,
+        smartMeters: 0,
+        gridConnections: 0
+      };
 
       // Fetch additional device types in a separate batch
       for (let i = 0; i < deviceBatches; i++) {
@@ -698,13 +700,13 @@ const Dashboard = () => {
                 
                 switch (index) {
                   case 0: // chargers
-                    totalChargers += deviceResults.length;
+                    additionalCounters.chargers += deviceResults.length;
                     break;
                   case 1: // smartMeters
-                    totalSmartMeters += deviceResults.length;
+                    additionalCounters.smartMeters += deviceResults.length;
                     break;
                   case 2: // gridConnections
-                    totalGridConnections += deviceResults.length;
+                    additionalCounters.gridConnections += deviceResults.length;
                     break;
                   default:
                     break;
@@ -724,9 +726,9 @@ const Dashboard = () => {
         solarInverters: Math.round(counters.solarInverters * scaleFactor),
         batteries: Math.round(counters.batteries * scaleFactor),
         hvacs: Math.round(counters.hvacs * scaleFactor),
-        chargers: Math.round(totalChargers * scaleFactor),
-        smartMeters: Math.round(totalSmartMeters * scaleFactor),
-        gridConnections: Math.round(totalGridConnections * scaleFactor),
+        chargers: Math.round(additionalCounters.chargers * scaleFactor),
+        smartMeters: Math.round(additionalCounters.smartMeters * scaleFactor),
+        gridConnections: Math.round(additionalCounters.gridConnections * scaleFactor),
         totalAddresses,
         sampledAddresses: addressesToProcess,
         isSampled: totalAddresses > MAX_ADDRESSES_FOR_ANALYTICS,

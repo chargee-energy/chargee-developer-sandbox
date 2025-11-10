@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import './ForecastGraph.css';
 
-const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15min, show15minData }) => {
+const ForecastGraph = ({ deliveryForecast, returnForecast, productionForecast, productionData, date, electricity15min, show15minData }) => {
   // Process forecast data to extract time series from intervals array
   const processForecastData = (forecast) => {
     if (!forecast) return [];
@@ -221,10 +221,124 @@ const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15mi
     return hourlyAggregated.sort((a, b) => a.timestamp - b.timestamp);
   };
 
-  // Process both forecasts
-  const deliveryData = useMemo(() => processForecastData(deliveryForecast), [deliveryForecast]);
-  const returnData = useMemo(() => processForecastData(returnForecast), [returnForecast]);
-  const actualData = useMemo(() => process15minData(electricity15min), [electricity15min, show15minData]);
+  // Process all forecasts
+  const deliveryData = useMemo(() => processForecastData(deliveryForecast), [deliveryForecast]); // eslint-disable-line react-hooks/exhaustive-deps
+  const returnData = useMemo(() => processForecastData(returnForecast), [returnForecast]); // eslint-disable-line react-hooks/exhaustive-deps
+  const productionForecastData = useMemo(() => processForecastData(productionForecast), [productionForecast]); // eslint-disable-line react-hooks/exhaustive-deps
+  const actualData = useMemo(() => process15minData(electricity15min), [electricity15min, show15minData]); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  // Process production data (actual production from solar inverter)
+  const processProductionData = (productionData) => {
+    if (!productionData) return [];
+    
+    // Extract results array
+    let dataPoints = [];
+    if (productionData.results && Array.isArray(productionData.results)) {
+      dataPoints = productionData.results;
+    } else if (Array.isArray(productionData)) {
+      dataPoints = productionData;
+    }
+    
+    // Group production data by hour
+    const hourlyData = new Map();
+    
+    dataPoints.forEach((point) => {
+      // Extract timestamp from 'time' field (ISO 8601 string)
+      const timeStr = point.time;
+      if (!timeStr) return;
+      
+      // Parse ISO timestamp string
+      const timestampDate = new Date(timeStr);
+      if (isNaN(timestampDate.getTime())) return;
+      
+      const timestampMillis = timestampDate.getTime();
+      
+      // Round down to the start of the hour
+      const hourStart = new Date(timestampMillis);
+      hourStart.setMinutes(0, 0, 0, 0);
+      const hourStartMillis = hourStart.getTime();
+      const hourStartSeconds = Math.floor(hourStartMillis / 1000);
+      
+      // Initialize hour if not exists
+      if (!hourlyData.has(hourStartSeconds)) {
+        hourlyData.set(hourStartSeconds, {
+          timestamp: hourStartSeconds,
+          start: hourStartMillis,
+          end: hourStartMillis + (60 * 60 * 1000),
+          powerValues: [],
+          energyValues: [],
+          count: 0
+        });
+      }
+      
+      const hourData = hourlyData.get(hourStartSeconds);
+      
+      // Extract power (W) and energyTotal (Wh) values
+      const power = typeof point.power === 'number' ? point.power : parseFloat(point.power) || 0;
+      const energyTotal = typeof point.energyTotal === 'number' ? point.energyTotal : parseFloat(point.energyTotal) || 0;
+      
+      hourData.powerValues.push(power);
+      hourData.energyValues.push(energyTotal);
+      hourData.count++;
+    });
+    
+    // Calculate hourly totals
+    // Sort hourly data by timestamp to process in order
+    const sortedHourlyData = Array.from(hourlyData.entries()).sort((a, b) => a[0] - b[0]);
+    
+    const hourlyAggregated = sortedHourlyData.map(([hourTimestamp, hourData], index) => {
+      // Average power for the hour
+      const avgPower = hourData.powerValues.length > 0 
+        ? hourData.powerValues.reduce((sum, val) => sum + val, 0) / hourData.powerValues.length
+        : 0;
+      
+      // Calculate energy for the hour
+      // If energyTotal is cumulative, calculate the difference
+      // Otherwise, estimate from average power
+      let hourlyEnergyWh = 0;
+      
+      if (hourData.energyValues.length > 0) {
+        // If energyTotal is cumulative, calculate difference from previous hour
+        const lastEnergy = hourData.energyValues[hourData.energyValues.length - 1];
+        
+        // If energyTotal is cumulative, calculate difference
+        // For now, assume it's incremental per data point, so use last - first
+        // If it's truly cumulative, we'd need the previous hour's value
+        if (index > 0) {
+          const prevHourData = sortedHourlyData[index - 1][1];
+          const prevLastEnergy = prevHourData.energyValues.length > 0
+            ? prevHourData.energyValues[prevHourData.energyValues.length - 1]
+            : 0;
+          hourlyEnergyWh = lastEnergy - prevLastEnergy;
+        } else {
+          // First hour, use the last value or estimate from power
+          hourlyEnergyWh = lastEnergy > 0 ? lastEnergy : (avgPower * 1);
+        }
+      } else {
+        // No energy values, estimate from average power (W * 1 hour = Wh)
+        hourlyEnergyWh = avgPower * 1;
+      }
+      
+      // Ensure non-negative values
+      hourlyEnergyWh = Math.max(0, hourlyEnergyWh);
+      
+      return {
+        timestamp: hourData.timestamp,
+        start: hourData.start,
+        end: hourData.end,
+        productionWh: hourlyEnergyWh,
+        power: avgPower,
+        time: formatTimestamp(hourData.timestamp),
+        timeRange: formatHourRange(hourData.start, hourData.end),
+        hour: new Date(hourData.start).getHours()
+      };
+    });
+    
+    // Sort by timestamp
+    return hourlyAggregated.sort((a, b) => a.timestamp - b.timestamp);
+  };
+  
+  const actualProductionData = useMemo(() => processProductionData(productionData), [productionData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Merge data by timestamp (hour)
   const chartData = useMemo(() => {
@@ -262,6 +376,40 @@ const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15mi
       dataMap.get(key).return = point.whSum; // Use whSum (watt-hours)
     });
     
+    // Add production forecast data - use whSum as the value
+    productionForecastData.forEach(point => {
+      const key = point.timestamp;
+      if (!dataMap.has(key)) {
+        dataMap.set(key, {
+          time: point.time,
+          timeRange: point.timeRange,
+          timestamp: point.timestamp,
+          hour: point.hour,
+          start: point.start,
+          end: point.end
+        });
+      }
+      dataMap.get(key).production = point.whSum; // Use whSum (watt-hours)
+    });
+    
+    // Add actual production data if available
+    if (productionData && actualProductionData.length > 0) {
+      actualProductionData.forEach(point => {
+        const key = point.timestamp;
+        if (!dataMap.has(key)) {
+          dataMap.set(key, {
+            time: point.time,
+            timeRange: point.timeRange,
+            timestamp: point.timestamp,
+            hour: point.hour,
+            start: point.start,
+            end: point.end
+          });
+        }
+        dataMap.get(key).actualProduction = point.productionWh; // Use productionWh (watt-hours)
+      });
+    }
+    
     // Add actual 15min data if available
     if (show15minData && actualData.length > 0) {
       actualData.forEach(point => {
@@ -287,7 +435,7 @@ const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15mi
       .sort((a, b) => a.timestamp - b.timestamp);
     
     return merged;
-  }, [deliveryData, returnData, actualData, show15minData]);
+  }, [deliveryData, returnData, productionForecastData, actualProductionData, productionData, actualData, show15minData]);
 
   const formatValue = (value) => {
     const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
@@ -325,9 +473,11 @@ const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15mi
   const hasData = chartData.length > 0;
   const hasDelivery = deliveryData.length > 0;
   const hasReturn = returnData.length > 0;
+  const hasProduction = productionForecastData.length > 0;
+  const hasActualProduction = productionData && actualProductionData.length > 0;
   const hasActual = show15minData && actualData.length > 0;
 
-  if (!hasData && !hasDelivery && !hasReturn) {
+  if (!hasData && !hasDelivery && !hasReturn && !hasProduction) {
     return (
       <div className="forecast-graph-container">
         <div className="forecast-graph-header">
@@ -343,7 +493,7 @@ const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15mi
   return (
     <div className="forecast-graph-container">
       <div className="forecast-graph-header">
-        <h3>Smart Meter Forecast</h3>
+        <h3>{hasProduction ? 'Production Forecast' : 'Smart Meter Forecast'}</h3>
         {date && <span className="forecast-date">Date: {date}</span>}
       </div>
       
@@ -387,6 +537,31 @@ const ForecastGraph = ({ deliveryForecast, returnForecast, date, electricity15mi
                 fillOpacity={0.7}
                 name="Return Forecast (Wh/hour)"
                 radius={[0, 0, 0, 0]}
+              />
+            )}
+            
+            {/* Production Forecast Bar - represents full hour */}
+            {hasProduction && (
+              <Bar
+                dataKey="production"
+                fill="#FFC107"
+                fillOpacity={0.7}
+                name="Production Forecast (Wh/hour)"
+                radius={[0, 0, 0, 0]}
+              />
+            )}
+            
+            {/* Actual Production Line - Dotted */}
+            {hasActualProduction && (
+              <Line
+                type="monotone"
+                dataKey="actualProduction"
+                stroke="#FF6F00"
+                strokeWidth={2}
+                name="Actual Production (Wh/hour)"
+                strokeDasharray="5 5"
+                dot={{ fill: '#FF6F00', r: 3 }}
+                activeDot={{ r: 5 }}
               />
             )}
             
