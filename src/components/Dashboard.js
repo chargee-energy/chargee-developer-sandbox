@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [deviceModalOpen, setDeviceModalOpen] = useState(false);
   const [deviceModalData, setDeviceModalData] = useState(null);
   const [deviceModalLoading, setDeviceModalLoading] = useState(false);
+  const [deviceModalSearch, setDeviceModalSearch] = useState('');
 
   // Fetch groups on mount
   useEffect(() => {
@@ -318,6 +319,49 @@ const Dashboard = () => {
       
       const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
       
+      // Handle Sparky's separately (they're part of addresses, not devices)
+      if (deviceType === 'sparkies') {
+        // Fetch all addresses and filter those with Sparky's
+        const MAX_ADDRESSES_FOR_DEVICE_LIST = 1000;
+        const firstPageData = await addressesAPI.getAddresses(selectedGroup.uuid, { offset: 0, limit: 1 });
+        const totalAddresses = firstPageData?.meta?.total || 0;
+        const addressesToProcess = Math.min(totalAddresses, MAX_ADDRESSES_FOR_DEVICE_LIST);
+        
+        // Fetch addresses in batches
+        const batchSize = 100;
+        const batches = Math.ceil(addressesToProcess / batchSize);
+        let allAddresses = [];
+        
+        for (let i = 0; i < batches; i++) {
+          const offset = i * batchSize;
+          const limit = Math.min(batchSize, addressesToProcess - offset);
+          const batchData = await addressesAPI.getAddresses(selectedGroup.uuid, { offset, limit });
+          allAddresses = allAddresses.concat(batchData?.results || []);
+        }
+
+        // Filter addresses that have Sparky's and format them for the modal
+        const sparkyAddresses = allAddresses
+          .filter(address => address.sparky)
+          .map(address => ({
+            identifier: address.sparky.serialNumber,
+            serialNumber: address.sparky.serialNumber,
+            boxCode: address.sparky.boxCode,
+            addressUuid: address.uuid,
+            addressSparky: address.sparky.serialNumber
+          }));
+
+        setDeviceModalData({ 
+          type: deviceType, 
+          devices: sparkyAddresses, 
+          count: sparkyAddresses.length,
+          totalAddresses: totalAddresses,
+          sampledAddresses: addressesToProcess,
+          isSampled: totalAddresses > MAX_ADDRESSES_FOR_DEVICE_LIST
+        });
+        setDeviceModalLoading(false);
+        return;
+      }
+      
       // Map device type to API function
       const deviceTypeMap = {
         vehicles: devicesAPI.getVehicles,
@@ -390,6 +434,7 @@ const Dashboard = () => {
   const handleCloseDeviceModal = () => {
     setDeviceModalOpen(false);
     setDeviceModalData(null);
+    setDeviceModalSearch('');
   };
 
   const formatTimeAgo = (timestamp) => {
@@ -1332,45 +1377,45 @@ const Dashboard = () => {
                 )}
                 <div className="analytics-grid analytics-grid-horizontal">
                 <div className="analytics-card" onClick={() => handleAnalyticsClick('vehicles', analytics.vehicles)} style={{ cursor: analytics.vehicles > 0 ? 'pointer' : 'default' }}>
-                  <div className="analytics-icon">🚗</div>
                   <div className="analytics-content">
-                    <div className="analytics-label">Vehicles</div>
                     <div className="analytics-value">{analytics.vehicles}</div>
+                    <div className="analytics-label">Vehicles</div>
                   </div>
                 </div>
                 <div className="analytics-card" onClick={() => handleAnalyticsClick('solarInverters', analytics.solarInverters)} style={{ cursor: analytics.solarInverters > 0 ? 'pointer' : 'default' }}>
-                  <div className="analytics-icon">☀️</div>
                   <div className="analytics-content">
-                    <div className="analytics-label">Solar Inverters</div>
                     <div className="analytics-value">{analytics.solarInverters}</div>
+                    <div className="analytics-label">Solar Inverters</div>
                   </div>
                 </div>
                 <div className="analytics-card" onClick={() => handleAnalyticsClick('batteries', analytics.batteries)} style={{ cursor: analytics.batteries > 0 ? 'pointer' : 'default' }}>
-                  <div className="analytics-icon">🔋</div>
                   <div className="analytics-content">
-                    <div className="analytics-label">Batteries</div>
                     <div className="analytics-value">{analytics.batteries}</div>
+                    <div className="analytics-label">Batteries</div>
                   </div>
                 </div>
                 <div className="analytics-card" onClick={() => handleAnalyticsClick('hvacs', analytics.hvacs)} style={{ cursor: analytics.hvacs > 0 ? 'pointer' : 'default' }}>
-                  <div className="analytics-icon">🌡️</div>
                   <div className="analytics-content">
-                    <div className="analytics-label">HVACs</div>
                     <div className="analytics-value">{analytics.hvacs}</div>
+                    <div className="analytics-label">HVACs</div>
                   </div>
                 </div>
                 <div className="analytics-card" onClick={() => handleAnalyticsClick('chargers', analytics.chargers || 0)} style={{ cursor: (analytics.chargers || 0) > 0 ? 'pointer' : 'default' }}>
-                  <div className="analytics-icon">🔌</div>
                   <div className="analytics-content">
-                    <div className="analytics-label">Chargers</div>
                     <div className="analytics-value">{analytics.chargers || 0}</div>
+                    <div className="analytics-label">Chargers</div>
                   </div>
                 </div>
                 <div className="analytics-card" onClick={() => handleAnalyticsClick('smartMeters', analytics.smartMeters || 0)} style={{ cursor: (analytics.smartMeters || 0) > 0 ? 'pointer' : 'default' }}>
-                  <div className="analytics-icon">📊</div>
                   <div className="analytics-content">
-                    <div className="analytics-label">Smart Meters</div>
                     <div className="analytics-value">{analytics.smartMeters || 0}</div>
+                    <div className="analytics-label">Smart Meters</div>
+                  </div>
+                </div>
+                <div className="analytics-card" onClick={() => handleAnalyticsClick('sparkies', analytics.connectedSparkies || 0)} style={{ cursor: (analytics.connectedSparkies || 0) > 0 ? 'pointer' : 'default' }}>
+                  <div className="analytics-content">
+                    <div className="analytics-value">{analytics.connectedSparkies || 0}</div>
+                    <div className="analytics-label">Sparky's</div>
                   </div>
                 </div>
               </div>
@@ -1534,6 +1579,7 @@ const Dashboard = () => {
                 {deviceModalData?.type === 'chargers' && '🔌'}
                 {deviceModalData?.type === 'smartMeters' && '📊'}
                 {deviceModalData?.type === 'gridConnections' && '⚡'}
+                {deviceModalData?.type === 'sparkies' && '⚡'}
                 {' '}
                 {deviceModalData?.type === 'vehicles' && 'Vehicles'}
                 {deviceModalData?.type === 'solarInverters' && 'Solar Inverters'}
@@ -1542,6 +1588,7 @@ const Dashboard = () => {
                 {deviceModalData?.type === 'chargers' && 'Chargers'}
                 {deviceModalData?.type === 'smartMeters' && 'Smart Meters'}
                 {deviceModalData?.type === 'gridConnections' && 'Grid Connections'}
+                {deviceModalData?.type === 'sparkies' && 'Sparky\'s'}
                 {deviceModalData?.count !== undefined && ` (${deviceModalData.count.toLocaleString()})`}
               </h3>
               <button 
@@ -1564,8 +1611,75 @@ const Dashboard = () => {
                       ℹ️ Showing devices from {deviceModalData.sampledAddresses.toLocaleString()} of {deviceModalData.totalAddresses.toLocaleString()} addresses
                     </div>
                   )}
+                  {/* Search Box */}
+                  <div className="device-modal-search-box">
+                    <input
+                      type="text"
+                      placeholder="Search by identifier, serial number, address, or box code..."
+                      value={deviceModalSearch}
+                      onChange={(e) => setDeviceModalSearch(e.target.value)}
+                      className="device-modal-search-input"
+                    />
+                    {deviceModalSearch.trim() && (
+                      <div className="device-modal-search-count">
+                        {(() => {
+                          const filtered = deviceModalData.devices.filter(device => {
+                            const searchLower = deviceModalSearch.toLowerCase();
+                            const identifier = (device.identifier || '').toLowerCase();
+                            const serialNumber = (device.serialNumber || '').toLowerCase();
+                            const addressUuid = (device.addressUuid || '').toLowerCase();
+                            const boxCode = (device.boxCode || '').toLowerCase();
+                            const brand = (device.brand || device.info?.brand || '').toLowerCase();
+                            const model = (device.model || device.info?.model || '').toLowerCase();
+                            const siteName = (device.siteName || '').toLowerCase();
+                            const displayName = (device.displayName || '').toLowerCase();
+                            const vin = (device.vin || '').toLowerCase();
+                            const meterNumber = (device.meterNumber || '').toLowerCase();
+                            
+                            return identifier.includes(searchLower) ||
+                              serialNumber.includes(searchLower) ||
+                              addressUuid.includes(searchLower) ||
+                              boxCode.includes(searchLower) ||
+                              brand.includes(searchLower) ||
+                              model.includes(searchLower) ||
+                              siteName.includes(searchLower) ||
+                              displayName.includes(searchLower) ||
+                              vin.includes(searchLower) ||
+                              meterNumber.includes(searchLower);
+                          });
+                          return `Showing ${filtered.length} of ${deviceModalData.devices.length} devices`;
+                        })()}
+                      </div>
+                    )}
+                  </div>
                   <div className="device-modal-list">
-                    {deviceModalData.devices.map((device, index) => (
+                    {deviceModalData.devices
+                      .filter(device => {
+                        if (!deviceModalSearch.trim()) return true;
+                        const searchLower = deviceModalSearch.toLowerCase();
+                        const identifier = (device.identifier || '').toLowerCase();
+                        const serialNumber = (device.serialNumber || '').toLowerCase();
+                        const addressUuid = (device.addressUuid || '').toLowerCase();
+                        const boxCode = (device.boxCode || '').toLowerCase();
+                        const brand = (device.brand || device.info?.brand || '').toLowerCase();
+                        const model = (device.model || device.info?.model || '').toLowerCase();
+                        const siteName = (device.siteName || '').toLowerCase();
+                        const displayName = (device.displayName || '').toLowerCase();
+                        const vin = (device.vin || '').toLowerCase();
+                        const meterNumber = (device.meterNumber || '').toLowerCase();
+                        
+                        return identifier.includes(searchLower) ||
+                          serialNumber.includes(searchLower) ||
+                          addressUuid.includes(searchLower) ||
+                          boxCode.includes(searchLower) ||
+                          brand.includes(searchLower) ||
+                          model.includes(searchLower) ||
+                          siteName.includes(searchLower) ||
+                          displayName.includes(searchLower) ||
+                          vin.includes(searchLower) ||
+                          meterNumber.includes(searchLower);
+                      })
+                      .map((device, index) => (
                       <div key={device.identifier || index} className="device-modal-item">
                         <div className="device-modal-item-header">
                           <div className="device-modal-item-title">
@@ -1587,21 +1701,44 @@ const Dashboard = () => {
                           </button>
                         </div>
                         <div className="device-modal-item-details">
-                          <div className="device-modal-item-detail">
-                            <span className="label">Identifier:</span>
-                            <span className="value uuid">{device.identifier}</span>
-                          </div>
-                          {device.addressUuid && (
-                            <div className="device-modal-item-detail">
-                              <span className="label">Address:</span>
-                              <span className="value uuid">{device.addressUuid}</span>
-                            </div>
-                          )}
-                          {device.addressSparky && (
-                            <div className="device-modal-item-detail">
-                              <span className="label">Sparky:</span>
-                              <span className="value">{device.addressSparky}</span>
-                            </div>
+                          {deviceModalData?.type === 'sparkies' ? (
+                            <>
+                              <div className="device-modal-item-detail">
+                                <span className="label">Serial Number:</span>
+                                <span className="value">{device.serialNumber || device.identifier}</span>
+                              </div>
+                              {device.boxCode && (
+                                <div className="device-modal-item-detail">
+                                  <span className="label">Box Code:</span>
+                                  <span className="value">{device.boxCode}</span>
+                                </div>
+                              )}
+                              {device.addressUuid && (
+                                <div className="device-modal-item-detail">
+                                  <span className="label">Address:</span>
+                                  <span className="value uuid">{device.addressUuid}</span>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <div className="device-modal-item-detail">
+                                <span className="label">Identifier:</span>
+                                <span className="value uuid">{device.identifier}</span>
+                              </div>
+                              {device.addressUuid && (
+                                <div className="device-modal-item-detail">
+                                  <span className="label">Address:</span>
+                                  <span className="value uuid">{device.addressUuid}</span>
+                                </div>
+                              )}
+                              {device.addressSparky && (
+                                <div className="device-modal-item-detail">
+                                  <span className="label">Sparky:</span>
+                                  <span className="value">{device.addressSparky}</span>
+                                </div>
+                              )}
+                            </>
                           )}
                           {device.lastChargeState?.batteryLevel && (
                             <div className="device-modal-item-detail">
