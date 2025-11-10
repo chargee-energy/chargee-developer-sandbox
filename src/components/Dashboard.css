@@ -101,6 +101,16 @@
   text-align: center;
 }
 
+.device-error-message {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--chargee-error);
+  padding: var(--chargee-space-sm) var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  margin-bottom: var(--chargee-space-md);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  font-size: 14px;
+}
+
 /* Admin Section */
 .admin-section {
   background: var(--chargee-white);

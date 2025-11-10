@@ -29,6 +29,7 @@ const Dashboard = () => {
     adminQuery: false
   });
   const [error, setError] = useState('');
+  const [deviceErrors, setDeviceErrors] = useState({});
   const [adminQuery, setAdminQuery] = useState('');
   const [adminQueryResult, setAdminQueryResult] = useState(null);
   const [addressSearch, setAddressSearch] = useState('');
@@ -135,63 +136,64 @@ const Dashboard = () => {
   const fetchDevices = async (groupUuid, addressUuid) => {
     setLoading(prev => ({ ...prev, devices: true }));
     setError('');
-    try {
-      // Fetch all device types in parallel
-      const [
-        vehiclesData,
-        chargersData,
-        solarInvertersData,
-        smartMetersData,
-        hvacsData,
-        batteriesData,
-        gridConnectionsData
-      ] = await Promise.all([
-        devicesAPI.getVehicles(addressUuid),
-        devicesAPI.getChargers(addressUuid),
-        devicesAPI.getSolarInverters(addressUuid),
-        devicesAPI.getSmartMeters(addressUuid),
-        devicesAPI.getHvacs(addressUuid),
-        devicesAPI.getBatteries(addressUuid),
-        devicesAPI.getGridConnections(addressUuid)
-      ]);
+    setDeviceErrors({});
+    
+    // Fetch all device types in parallel, but handle each independently
+    const deviceFetches = [
+      { key: 'vehicles', apiCall: () => devicesAPI.getVehicles(addressUuid) },
+      { key: 'chargers', apiCall: () => devicesAPI.getChargers(addressUuid) },
+      { key: 'solarInverters', apiCall: () => devicesAPI.getSolarInverters(addressUuid) },
+      { key: 'smartMeters', apiCall: () => devicesAPI.getSmartMeters(addressUuid) },
+      { key: 'hvacs', apiCall: () => devicesAPI.getHvacs(addressUuid) },
+      { key: 'batteries', apiCall: () => devicesAPI.getBatteries(addressUuid) },
+      { key: 'gridConnections', apiCall: () => devicesAPI.getGridConnections(addressUuid) }
+    ];
 
-      console.log('Devices API responses:', {
-        vehiclesData,
-        chargersData,
-        solarInvertersData,
-        smartMetersData,
-        hvacsData,
-        batteriesData,
-        gridConnectionsData
-      });
+    // Use Promise.allSettled to handle each device type independently
+    const results = await Promise.allSettled(
+      deviceFetches.map(fetch => fetch.apiCall())
+    );
 
-      // Extract results from each API response (handle both { results: [...] } and direct array)
-      const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
+    // Extract results from each API response (handle both { results: [...] } and direct array)
+    const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
 
-      setDevices({
-        vehicles: extractResults(vehiclesData),
-        chargers: extractResults(chargersData),
-        solarInverters: extractResults(solarInvertersData),
-        smartMeters: extractResults(smartMetersData),
-        hvacs: extractResults(hvacsData),
-        batteries: extractResults(batteriesData),
-        gridConnections: extractResults(gridConnectionsData)
-      });
-    } catch (err) {
-      setError('Failed to fetch devices');
-      console.error('Error fetching devices:', err);
-      setDevices({
-        vehicles: [],
-        chargers: [],
-        solarInverters: [],
-        smartMeters: [],
-        hvacs: [],
-        batteries: [],
-        gridConnections: []
-      });
-    } finally {
-      setLoading(prev => ({ ...prev, devices: false }));
-    }
+    const newDevices = {
+      vehicles: [],
+      chargers: [],
+      solarInverters: [],
+      smartMeters: [],
+      hvacs: [],
+      batteries: [],
+      gridConnections: []
+    };
+
+    const newDeviceErrors = {};
+
+    // Process each result
+    results.forEach((result, index) => {
+      const deviceKey = deviceFetches[index].key;
+      
+      if (result.status === 'fulfilled') {
+        try {
+          const data = result.value;
+          console.log(`${deviceKey} API response:`, data);
+          newDevices[deviceKey] = extractResults(data);
+        } catch (err) {
+          console.error(`Error processing ${deviceKey} data:`, err);
+          newDeviceErrors[deviceKey] = `Failed to process ${getDeviceTypeName(deviceKey)} data`;
+        }
+      } else {
+        // Handle rejected promise
+        const error = result.reason;
+        console.error(`Error fetching ${deviceKey}:`, error);
+        newDeviceErrors[deviceKey] = `Failed to fetch ${getDeviceTypeName(deviceKey)}`;
+        newDevices[deviceKey] = []; // Set empty array for failed device type
+      }
+    });
+
+    setDevices(newDevices);
+    setDeviceErrors(newDeviceErrors);
+    setLoading(prev => ({ ...prev, devices: false }));
   };
 
   const handleGroupSelect = (group) => {
@@ -232,6 +234,19 @@ const Dashboard = () => {
   const handleCloseJsonModal = () => {
     setJsonModalOpen(false);
     setSelectedDeviceJson(null);
+  };
+
+  const getDeviceTypeName = (key) => {
+    const names = {
+      vehicles: 'Vehicles',
+      chargers: 'Chargers',
+      solarInverters: 'Solar Inverters',
+      smartMeters: 'Smart Meters',
+      hvacs: 'HVACs',
+      batteries: 'Batteries',
+      gridConnections: 'Grid Connections'
+    };
+    return names[key] || key;
   };
 
   const handleCopyJson = () => {
@@ -856,6 +871,11 @@ const Dashboard = () => {
             ) : (
               <div className="devices-container">
                 {/* Vehicles */}
+                {deviceErrors.vehicles && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.vehicles}
+                  </div>
+                )}
                 {devices.vehicles.length > 0 && (
                   <div className="device-category">
                     <h3>🚗 Vehicles ({devices.vehicles.length})</h3>
@@ -901,6 +921,11 @@ const Dashboard = () => {
                 )}
 
                 {/* Chargers */}
+                {deviceErrors.chargers && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.chargers}
+                  </div>
+                )}
                 {devices.chargers.length > 0 && (
                   <div className="device-category">
                     <h3>🔌 Chargers ({devices.chargers.length})</h3>
@@ -940,6 +965,11 @@ const Dashboard = () => {
                 )}
 
                 {/* Solar Inverters */}
+                {deviceErrors.solarInverters && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.solarInverters}
+                  </div>
+                )}
                 {devices.solarInverters.length > 0 && (
                   <div className="device-category">
                     <h3>☀️ Solar Inverters ({devices.solarInverters.length})</h3>
@@ -985,6 +1015,11 @@ const Dashboard = () => {
                 )}
 
                 {/* Smart Meters */}
+                {deviceErrors.smartMeters && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.smartMeters}
+                  </div>
+                )}
                 {devices.smartMeters.length > 0 && (
                   <div className="device-category">
                     <h3>📊 Smart Meters ({devices.smartMeters.length})</h3>
@@ -1025,6 +1060,11 @@ const Dashboard = () => {
                 )}
 
                 {/* HVACs */}
+                {deviceErrors.hvacs && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.hvacs}
+                  </div>
+                )}
                 {devices.hvacs.length > 0 && (
                   <div className="device-category">
                     <h3>🌡️ HVAC Systems ({devices.hvacs.length})</h3>
@@ -1070,6 +1110,11 @@ const Dashboard = () => {
                 )}
 
                 {/* Batteries */}
+                {deviceErrors.batteries && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.batteries}
+                  </div>
+                )}
                 {devices.batteries.length > 0 && (
                   <div className="device-category">
                     <h3>🔋 Batteries ({devices.batteries.length})</h3>
@@ -1111,6 +1156,11 @@ const Dashboard = () => {
                 )}
 
                 {/* Grid Connections */}
+                {deviceErrors.gridConnections && (
+                  <div className="device-error-message">
+                    ⚠️ {deviceErrors.gridConnections}
+                  </div>
+                )}
                 {devices.gridConnections.length > 0 && (
                   <div className="device-category">
                     <h3>⚡ Grid Connections ({devices.gridConnections.length})</h3>
