@@ -1,0 +1,532 @@
+/* Devices Details Styling - Reusing SparkyDetails styles */
+.devices-details {
+  min-height: 100vh;
+  background-color: var(--chargee-gray-100);
+}
+
+.devices-header {
+  background: var(--chargee-white);
+  border-bottom: 1px solid var(--chargee-gray-200);
+  box-shadow: var(--chargee-shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.devices-header .header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--chargee-space-lg) var(--chargee-space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--chargee-space-lg);
+}
+
+.devices-header h1 {
+  color: var(--chargee-gray-900);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.back-button {
+  background: var(--chargee-gray-200);
+  color: var(--chargee-gray-700);
+  border: none;
+  padding: var(--chargee-space-sm) var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: var(--chargee-gray-300);
+  transform: translateY(-1px);
+}
+
+.devices-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--chargee-space-xl);
+}
+
+.error-banner {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--chargee-error);
+  padding: var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  margin-bottom: var(--chargee-space-lg);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  text-align: center;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.error-state h2 {
+  color: var(--chargee-gray-900);
+  font-size: 24px;
+  margin-bottom: var(--chargee-space-md);
+}
+
+.error-state p {
+  color: var(--chargee-gray-600);
+  margin-bottom: var(--chargee-space-lg);
+}
+
+/* Address Information Section */
+.address-info-section {
+  background: var(--chargee-white);
+  border-radius: var(--chargee-radius-lg);
+  padding: var(--chargee-space-xl);
+  margin-bottom: var(--chargee-space-xl);
+  box-shadow: var(--chargee-shadow-md);
+  border: 1px solid var(--chargee-gray-200);
+}
+
+.address-info-section h2 {
+  color: var(--chargee-gray-900);
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 var(--chargee-space-lg) 0;
+  padding-bottom: var(--chargee-space-md);
+  border-bottom: 2px solid var(--chargee-gray-200);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--chargee-space-lg);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chargee-space-xs);
+}
+
+.info-item label {
+  color: var(--chargee-gray-600);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  color: var(--chargee-gray-900);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.info-item .uuid {
+  font-family: var(--chargee-font-mono);
+  font-size: 14px;
+  word-break: break-all;
+}
+
+/* Devices Container */
+.devices-container {
+  background: var(--chargee-white);
+  border-radius: var(--chargee-radius-lg);
+  padding: var(--chargee-space-xl);
+  box-shadow: var(--chargee-shadow-md);
+  border: 1px solid var(--chargee-gray-200);
+}
+
+.device-error-message {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--chargee-error);
+  padding: var(--chargee-space-sm) var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  margin-bottom: var(--chargee-space-md);
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  font-size: 14px;
+}
+
+.device-category {
+  margin-bottom: var(--chargee-space-xl);
+  background: var(--chargee-white);
+  border-radius: var(--chargee-radius-lg);
+  padding: var(--chargee-space-lg);
+  box-shadow: var(--chargee-shadow-sm);
+  border: 2px solid var(--chargee-gray-200);
+  transition: all 0.3s ease;
+}
+
+.device-category:hover {
+  box-shadow: var(--chargee-shadow-md);
+  transform: translateY(-2px);
+}
+
+.device-category:last-child {
+  margin-bottom: 0;
+}
+
+.device-category h3 {
+  color: var(--chargee-gray-900);
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 var(--chargee-space-lg) 0;
+  padding: var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  background: linear-gradient(135deg, var(--chargee-gray-50) 0%, var(--chargee-gray-100) 100%);
+  border-left: 5px solid var(--chargee-gray-400);
+  display: flex;
+  align-items: center;
+  gap: var(--chargee-space-sm);
+}
+
+/* Vehicle Category */
+.device-category:has(.vehicle-card) h3 {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
+  border-left-color: #2196F3;
+  color: #1976D2;
+}
+
+/* Charger Category */
+.device-category:has(.charger-card) h3 {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+  border-left-color: #4CAF50;
+  color: #388E3C;
+}
+
+/* Solar Inverter Category */
+.device-category:has(.solar-card) h3 {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%);
+  border-left-color: #FFC107;
+  color: #F57C00;
+}
+
+/* Smart Meter Category */
+.device-category:has(.meter-card) h3 {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(156, 39, 176, 0.05) 100%);
+  border-left-color: #9C27B0;
+  color: #7B1FA2;
+}
+
+/* HVAC Category */
+.device-category:has(.hvac-card) h3 {
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.1) 0%, rgba(0, 188, 212, 0.05) 100%);
+  border-left-color: #00BCD4;
+  color: #0097A7;
+}
+
+/* Battery Category */
+.device-category:has(.battery-card) h3 {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+  border-left-color: #FF9800;
+  color: #F57C00;
+}
+
+/* Grid Connection Category */
+.device-category:has(.grid-card) h3 {
+  background: linear-gradient(135deg, rgba(63, 81, 181, 0.1) 0%, rgba(63, 81, 181, 0.05) 100%);
+  border-left-color: #3F51B5;
+  color: #303F9F;
+}
+
+.device-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--chargee-space-md);
+}
+
+.device-card {
+  background: var(--chargee-white);
+  border: 2px solid var(--chargee-gray-200);
+  border-radius: var(--chargee-radius-lg);
+  padding: var(--chargee-space-md);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.device-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--chargee-gray-300);
+  transition: width 0.2s ease;
+}
+
+.device-card:hover {
+  border-color: var(--chargee-gray-300);
+  box-shadow: var(--chargee-shadow-md);
+  transform: translateY(-2px);
+}
+
+.device-card:hover::before {
+  width: 6px;
+}
+
+/* Vehicle Card */
+.vehicle-card {
+  border-left-color: #2196F3;
+}
+
+.vehicle-card::before {
+  background: #2196F3;
+}
+
+.vehicle-card:hover {
+  border-color: #2196F3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+/* Charger Card */
+.charger-card {
+  border-left-color: #4CAF50;
+}
+
+.charger-card::before {
+  background: #4CAF50;
+}
+
+.charger-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+/* Solar Card */
+.solar-card {
+  border-left-color: #FFC107;
+}
+
+.solar-card::before {
+  background: #FFC107;
+}
+
+.solar-card:hover {
+  border-color: #FFC107;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+/* Meter Card */
+.meter-card {
+  border-left-color: #9C27B0;
+}
+
+.meter-card::before {
+  background: #9C27B0;
+}
+
+.meter-card:hover {
+  border-color: #9C27B0;
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.2);
+}
+
+/* HVAC Card */
+.hvac-card {
+  border-left-color: #00BCD4;
+}
+
+.hvac-card::before {
+  background: #00BCD4;
+}
+
+.hvac-card:hover {
+  border-color: #00BCD4;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.2);
+}
+
+/* Battery Card */
+.battery-card {
+  border-left-color: #FF9800;
+}
+
+.battery-card::before {
+  background: #FF9800;
+}
+
+.battery-card:hover {
+  border-color: #FF9800;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+}
+
+/* Grid Card */
+.grid-card {
+  border-left-color: #3F51B5;
+}
+
+.grid-card::before {
+  background: #3F51B5;
+}
+
+.grid-card:hover {
+  border-color: #3F51B5;
+  box-shadow: 0 4px 12px rgba(63, 81, 181, 0.2);
+}
+
+.device-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--chargee-space-md);
+  padding-bottom: var(--chargee-space-sm);
+  border-bottom: 1px solid var(--chargee-gray-200);
+}
+
+.device-brand {
+  font-weight: 600;
+  color: var(--chargee-gray-900);
+  margin-right: var(--chargee-space-xs);
+}
+
+.device-model {
+  color: var(--chargee-gray-600);
+  font-size: 14px;
+}
+
+.json-button {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: var(--chargee-space-xs);
+  border-radius: var(--chargee-radius-sm);
+  transition: all 0.2s ease;
+}
+
+.json-button:hover {
+  background: var(--chargee-gray-200);
+}
+
+.device-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chargee-space-sm);
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-item .label {
+  color: var(--chargee-gray-600);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.detail-item .value {
+  color: var(--chargee-gray-900);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.placeholder {
+  text-align: center;
+  color: var(--chargee-gray-500);
+  padding: var(--chargee-space-xl);
+  font-size: 16px;
+}
+
+.loading {
+  text-align: center;
+  color: var(--chargee-gray-600);
+  padding: var(--chargee-space-xl);
+  font-size: 16px;
+}
+
+/* JSON Modal */
+.json-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.json-modal {
+  background: var(--chargee-white);
+  border-radius: var(--chargee-radius-lg);
+  box-shadow: var(--chargee-shadow-lg);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.json-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--chargee-space-lg);
+  border-bottom: 1px solid var(--chargee-gray-200);
+}
+
+.json-modal-header h3 {
+  margin: 0;
+  color: var(--chargee-gray-900);
+  font-size: 20px;
+}
+
+.json-modal-actions {
+  display: flex;
+  gap: var(--chargee-space-sm);
+}
+
+.copy-json-button,
+.close-json-button {
+  background: var(--chargee-gray-200);
+  color: var(--chargee-gray-700);
+  border: none;
+  padding: var(--chargee-space-sm) var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-json-button:hover {
+  background: var(--chargee-green);
+  color: var(--chargee-white);
+}
+
+.close-json-button:hover {
+  background: var(--chargee-error);
+  color: var(--chargee-white);
+}
+
+.json-modal-content {
+  padding: var(--chargee-space-lg);
+  overflow: auto;
+}
+
+.json-display {
+  background: var(--chargee-gray-50);
+  border: 1px solid var(--chargee-gray-200);
+  border-radius: var(--chargee-radius-md);
+  padding: var(--chargee-space-md);
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--chargee-font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.json-display code {
+  color: var(--chargee-gray-900);
+}
+

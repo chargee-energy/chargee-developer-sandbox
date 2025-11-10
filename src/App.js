@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SparkyDetails from './components/SparkyDetails';
+import DevicesDetails from './components/DevicesDetails';
 import './App.css';
 
 function App() {
@@ -29,6 +30,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SparkyDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/devices-details" 
+                element={
+                  <ProtectedRoute>
+                    <DevicesDetails />
                   </ProtectedRoute>
                 } 
               />

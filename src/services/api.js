@@ -56,8 +56,8 @@ export const groupsAPI = {
 };
 
 export const addressesAPI = {
-  getAddresses: async (groupUuid) => {
-    const response = await api.get(`/groups/${groupUuid}/addresses`);
+  getAddresses: async (groupUuid, params = {}) => {
+    const response = await api.get(`/groups/${groupUuid}/addresses`, { params });
     return response.data;
   },
 };
