@@ -26,7 +26,8 @@ const Dashboard = () => {
     groups: false,
     addresses: false,
     devices: false,
-    adminQuery: false
+    adminQuery: false,
+    analytics: false
   });
   const [error, setError] = useState('');
   const [deviceErrors, setDeviceErrors] = useState({});
@@ -37,6 +38,8 @@ const Dashboard = () => {
   const addressesPerPage = 20;
   const [jsonModalOpen, setJsonModalOpen] = useState(false);
   const [selectedDeviceJson, setSelectedDeviceJson] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Fetch groups on mount
   useEffect(() => {
@@ -201,6 +204,8 @@ const Dashboard = () => {
     setSelectedAddress(null); // Clear selected address when changing groups
     setAddressSearch('');
     setAddressPage(1);
+    setAnalytics(null); // Reset analytics when changing groups
+    setShowAnalytics(false); // Hide analytics when changing groups
     fetchAddresses(group.uuid);
   };
 
@@ -247,6 +252,114 @@ const Dashboard = () => {
       gridConnections: 'Grid Connections'
     };
     return names[key] || key;
+  };
+
+  const fetchGroupAnalytics = async (groupUuid) => {
+    if (!groupUuid) return;
+    
+    setLoading(prev => ({ ...prev, analytics: true }));
+    setError('');
+    
+    try {
+      // Fetch all addresses for the group
+      const addressesData = await addressesAPI.getAddresses(groupUuid);
+      const addressesArray = addressesData?.results || [];
+      
+      if (addressesArray.length === 0) {
+        setAnalytics({
+          connectedSparkies: 0,
+          reportingSparkies: 0,
+          vehicles: 0,
+          solarInverters: 0,
+          batteries: 0,
+          hvacs: 0
+        });
+        setLoading(prev => ({ ...prev, analytics: false }));
+        return;
+      }
+
+      // Count connected Sparky's (addresses with sparky)
+      const connectedSparkies = addressesArray.filter(addr => addr.sparky).length;
+
+      // Check which Sparky's are reporting (can fetch latest data)
+      const sparkyChecks = addressesArray
+        .filter(addr => addr.sparky?.serialNumber)
+        .map(addr => ({
+          serialNumber: addr.sparky.serialNumber,
+          check: sparkyAPI.getElectricityLatestP1(addr.sparky.serialNumber).catch(() => null)
+        }));
+
+      const sparkyResults = await Promise.allSettled(
+        sparkyChecks.map(check => check.check)
+      );
+      
+      const reportingSparkies = sparkyResults.filter(
+        result => result.status === 'fulfilled' && result.value !== null
+      ).length;
+
+      // Fetch devices for all addresses in parallel
+      const deviceFetches = addressesArray.map(address => 
+        Promise.allSettled([
+          devicesAPI.getVehicles(address.uuid),
+          devicesAPI.getSolarInverters(address.uuid),
+          devicesAPI.getBatteries(address.uuid),
+          devicesAPI.getHvacs(address.uuid)
+        ])
+      );
+
+      const allDeviceResults = await Promise.all(deviceFetches);
+
+      // Extract results and aggregate counts
+      const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
+
+      let totalVehicles = 0;
+      let totalSolarInverters = 0;
+      let totalBatteries = 0;
+      let totalHvacs = 0;
+
+      allDeviceResults.forEach((addressResults) => {
+        addressResults.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            try {
+              const data = result.value;
+              const results = extractResults(data);
+              
+              switch (index) {
+                case 0: // vehicles
+                  totalVehicles += results.length;
+                  break;
+                case 1: // solarInverters
+                  totalSolarInverters += results.length;
+                  break;
+                case 2: // batteries
+                  totalBatteries += results.length;
+                  break;
+                case 3: // hvacs
+                  totalHvacs += results.length;
+                  break;
+              }
+            } catch (err) {
+              console.error('Error processing device data:', err);
+            }
+          }
+        });
+      });
+
+      setAnalytics({
+        connectedSparkies,
+        reportingSparkies,
+        vehicles: totalVehicles,
+        solarInverters: totalSolarInverters,
+        batteries: totalBatteries,
+        hvacs: totalHvacs
+      });
+    } catch (err) {
+      setError(`Failed to fetch group analytics: ${err.response?.data?.message || err.message}`);
+      console.error('Error fetching group analytics:', err);
+      setAnalytics(null);
+    } finally {
+      setLoading(prev => ({ ...prev, analytics: false }));
+    }
   };
 
   const handleCopyJson = () => {
@@ -763,6 +876,80 @@ const Dashboard = () => {
               <div className="placeholder">No groups found</div>
             )}
           </div>
+
+          {/* Group Analytics Section */}
+          {selectedGroup && (
+            <div className="section">
+              <div className="section-header">
+                <h2>Group Analytics</h2>
+                <button
+                  className="analytics-toggle"
+                  onClick={() => {
+                    if (!showAnalytics && !analytics) {
+                      fetchGroupAnalytics(selectedGroup.uuid);
+                    }
+                    setShowAnalytics(!showAnalytics);
+                  }}
+                >
+                  {showAnalytics ? 'Hide' : 'Show'} Analytics
+                </button>
+              </div>
+              {showAnalytics && (
+                <>
+                  {loading.analytics ? (
+                    <div className="loading">Loading analytics...</div>
+                  ) : analytics ? (
+                    <div className="analytics-grid">
+                      <div className="analytics-card">
+                        <div className="analytics-icon">⚡</div>
+                        <div className="analytics-content">
+                          <div className="analytics-label">Connected Sparky's</div>
+                          <div className="analytics-value">{analytics.connectedSparkies}</div>
+                        </div>
+                      </div>
+                      <div className="analytics-card">
+                        <div className="analytics-icon">📊</div>
+                        <div className="analytics-content">
+                          <div className="analytics-label">Reporting Sparky's</div>
+                          <div className="analytics-value">{analytics.reportingSparkies}</div>
+                        </div>
+                      </div>
+                      <div className="analytics-card">
+                        <div className="analytics-icon">🚗</div>
+                        <div className="analytics-content">
+                          <div className="analytics-label">Vehicles</div>
+                          <div className="analytics-value">{analytics.vehicles}</div>
+                        </div>
+                      </div>
+                      <div className="analytics-card">
+                        <div className="analytics-icon">☀️</div>
+                        <div className="analytics-content">
+                          <div className="analytics-label">Solar Inverters</div>
+                          <div className="analytics-value">{analytics.solarInverters}</div>
+                        </div>
+                      </div>
+                      <div className="analytics-card">
+                        <div className="analytics-icon">🔋</div>
+                        <div className="analytics-content">
+                          <div className="analytics-label">Batteries</div>
+                          <div className="analytics-value">{analytics.batteries}</div>
+                        </div>
+                      </div>
+                      <div className="analytics-card">
+                        <div className="analytics-icon">🌡️</div>
+                        <div className="analytics-content">
+                          <div className="analytics-label">HVACs</div>
+                          <div className="analytics-value">{analytics.hvacs}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="placeholder">No analytics data available</div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Addresses Section */}
           <div className="section">
