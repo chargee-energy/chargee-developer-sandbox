@@ -53,6 +53,10 @@ export const groupsAPI = {
     const response = await api.get('/groups');
     return response.data;
   },
+  getGroupEnergyLatest: async (groupUuid) => {
+    const response = await api.get(`/groups/${groupUuid}/energy/latest`);
+    return response.data;
+  },
 };
 
 export const addressesAPI = {
@@ -117,6 +121,26 @@ export const devicesAPI = {
     const response = await api.get(`/addresses/${addressUuid}/solar-inverters/${solarInverterUuid}/energy/production`, {
       params: { fromDate, toDate, sortBy, limit }
     });
+    return response.data;
+  },
+  getSolarInverterSchedules: async (addressUuid, solarInverterUuid) => {
+    const response = await api.get(`/addresses/${addressUuid}/solar_inverters/${solarInverterUuid}/schedules`);
+    return response.data;
+  },
+  getSolarInverterSchedule: async (addressUuid, solarInverterUuid, scheduleUuid) => {
+    const response = await api.get(`/addresses/${addressUuid}/solar_inverters/${solarInverterUuid}/schedules/${scheduleUuid}`);
+    return response.data;
+  },
+  createSolarInverterSchedule: async (addressUuid, solarInverterUuid, scheduleData) => {
+    const response = await api.post(`/addresses/${addressUuid}/solar_inverters/${solarInverterUuid}/schedules`, scheduleData);
+    return response.data;
+  },
+  updateSolarInverterSchedule: async (addressUuid, solarInverterUuid, scheduleUuid, scheduleData) => {
+    const response = await api.put(`/addresses/${addressUuid}/solar_inverters/${solarInverterUuid}/schedules/${scheduleUuid}`, scheduleData);
+    return response.data;
+  },
+  deleteSolarInverterSchedule: async (addressUuid, solarInverterUuid, scheduleUuid) => {
+    const response = await api.delete(`/addresses/${addressUuid}/solar_inverters/${solarInverterUuid}/schedules/${scheduleUuid}`);
     return response.data;
   },
 };

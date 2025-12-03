@@ -38,6 +38,7 @@ const Dashboard = () => {
   const [deviceModalData, setDeviceModalData] = useState(null);
   const [deviceModalLoading, setDeviceModalLoading] = useState(false);
   const [deviceModalSearch, setDeviceModalSearch] = useState('');
+  const [groupEnergy, setGroupEnergy] = useState(null);
 
   // Fetch groups on mount
   useEffect(() => {
@@ -91,6 +92,33 @@ const Dashboard = () => {
     setSearchParams(params, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroup, selectedAddress]);
+
+  // Fetch group energy data every second
+  useEffect(() => {
+    if (!selectedGroup) {
+      setGroupEnergy(null);
+      return;
+    }
+
+    const fetchGroupEnergy = async () => {
+      try {
+        const data = await groupsAPI.getGroupEnergyLatest(selectedGroup.uuid);
+        setGroupEnergy(data);
+      } catch (err) {
+        console.error('Error fetching group energy:', err);
+        // Don't set error state, just log it to avoid disrupting the UI
+      }
+    };
+
+    // Fetch immediately
+    fetchGroupEnergy();
+
+    // Then fetch every second
+    const interval = setInterval(fetchGroupEnergy, 1000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGroup]);
 
   const fetchGroups = async () => {
     setLoading(prev => ({ ...prev, groups: true }));
@@ -263,6 +291,16 @@ const Dashboard = () => {
 
   const handleAnalyticsClick = async (deviceType, count) => {
     if (!selectedGroup || count === 0) return;
+    
+    // Navigate to steerable inverters route instead of opening modal
+    if (deviceType === 'steerableInverters') {
+      navigate('/steerable-inverters', {
+        state: {
+          group: selectedGroup
+        }
+      });
+      return;
+    }
     
     setDeviceModalOpen(true);
     setDeviceModalLoading(true);
@@ -581,6 +619,7 @@ const Dashboard = () => {
       const counters = {
         vehicles: 0,
         solarInverters: 0,
+        steerableInverters: 0,
         batteries: 0,
         hvacs: 0
       };
@@ -619,6 +658,12 @@ const Dashboard = () => {
                     break;
                   case 1: // solarInverters
                     counters.solarInverters += deviceResults.length;
+                    // Count steerable inverters separately
+                    deviceResults.forEach(inverter => {
+                      if (inverter.info?.isSteerable === true) {
+                        counters.steerableInverters += 1;
+                      }
+                    });
                     break;
                   case 2: // batteries
                     counters.batteries += deviceResults.length;
@@ -724,6 +769,7 @@ const Dashboard = () => {
         reportingSparkies: Math.round(reportingSparkies * scaleFactor),
         vehicles: Math.round(counters.vehicles * scaleFactor),
         solarInverters: Math.round(counters.solarInverters * scaleFactor),
+        steerableInverters: Math.round(counters.steerableInverters * scaleFactor),
         batteries: Math.round(counters.batteries * scaleFactor),
         hvacs: Math.round(counters.hvacs * scaleFactor),
         chargers: Math.round(additionalCounters.chargers * scaleFactor),
@@ -861,12 +907,12 @@ const Dashboard = () => {
     if (!addressSearch.trim()) return addresses;
     const searchLower = addressSearch.toLowerCase();
     return addresses.filter((address) => {
-      return (
-        address.uuid.toLowerCase().includes(searchLower) ||
-        address.sparky?.serialNumber?.toLowerCase().includes(searchLower) ||
-        address.sparky?.boxCode?.toLowerCase().includes(searchLower)
-      );
-    });
+    return (
+      address.uuid.toLowerCase().includes(searchLower) ||
+      address.sparky?.serialNumber?.toLowerCase().includes(searchLower) ||
+      address.sparky?.boxCode?.toLowerCase().includes(searchLower)
+    );
+  });
   }, [addresses, addressSearch]);
 
   const totalPages = Math.ceil((addressTotal || filteredAddresses.length) / addressesPerPage);
@@ -1284,25 +1330,25 @@ const Dashboard = () => {
           <div className="section-header">
             <h2>Groups</h2>
           </div>
-          {loading.groups ? (
-            <div className="loading">Loading groups...</div>
-          ) : Array.isArray(groups) && groups.length > 0 ? (
-            <div className="list">
-              {groups.map((group) => (
-                <div
-                  key={group.uuid}
-                  className={`list-item ${selectedGroup?.uuid === group.uuid ? 'selected' : ''}`}
-                  onClick={() => handleGroupSelect(group)}
-                >
-                  <div className="item-title">{group.name}</div>
-                  <div className="item-subtitle uuid">{group.uuid}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="placeholder">No groups found</div>
-          )}
-        </div>
+            {loading.groups ? (
+              <div className="loading">Loading groups...</div>
+            ) : Array.isArray(groups) && groups.length > 0 ? (
+              <div className="list">
+                {groups.map((group) => (
+                  <div
+                    key={group.uuid}
+                    className={`list-item ${selectedGroup?.uuid === group.uuid ? 'selected' : ''}`}
+                    onClick={() => handleGroupSelect(group)}
+                  >
+                    <div className="item-title">{group.name}</div>
+                    <div className="item-subtitle uuid">{group.uuid}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="placeholder">No groups found</div>
+            )}
+          </div>
 
         {/* Group Analytics Section - Full Width */}
         {selectedGroup && (user?.role === 'extendeduser' || user?.role === 'admin') && (
@@ -1403,10 +1449,58 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* Steerable Inverters & Energy Section - Full Width */}
+        {selectedGroup && analytics && (analytics.steerableInverters || 0) > 0 && (
+          <div className="section section-full-width">
+            <div className="section-header">
+              <h2>Steerable Inverters & Energy</h2>
+            </div>
+            <div className="steerable-energy-grid">
+              <div 
+                className="analytics-card"
+                onClick={() => handleAnalyticsClick('steerableInverters', analytics.steerableInverters || 0)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="analytics-content">
+                  <div className="analytics-value">{analytics.steerableInverters || 0}</div>
+                  <div className="analytics-label">Steerable Inverters</div>
+                </div>
+              </div>
+              
+              <div className="group-energy-card">
+                <div className="group-energy-content">
+                  <div className="group-energy-header">
+                    <h3>Total Generation</h3>
+                    <span className="energy-update-indicator">Live</span>
+                  </div>
+                  {groupEnergy ? (
+                    <div className="energy-values">
+                      <div className="energy-item">
+                        <span className="energy-label">Production</span>
+                        <span className="energy-value production">{groupEnergy.production?.toFixed(1) || '0.0'} W</span>
+                      </div>
+                      <div className="energy-item">
+                        <span className="energy-label">Return</span>
+                        <span className="energy-value return">{groupEnergy.return?.toFixed(1) || '0.0'} W</span>
+                      </div>
+                      <div className="energy-item">
+                        <span className="energy-label">Delivery</span>
+                        <span className="energy-value delivery">{groupEnergy.delivery?.toFixed(1) || '0.0'} W</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="energy-loading">Loading energy data...</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Addresses Section - Full Width */}
         <div className="section section-full-width">
-          <div className="section-header">
-            <h2>Addresses</h2>
+            <div className="section-header">
+              <h2>Addresses</h2>
             <div className="addresses-header-actions">
               {selectedGroup && addressTotal > 0 && (
                 <span className="section-count">({addressTotal.toLocaleString()} total)</span>
@@ -1431,7 +1525,7 @@ const Dashboard = () => {
                 </>
               )}
             </div>
-          </div>
+            </div>
             {!selectedGroup ? (
               <div className="placeholder">Select a group to view addresses</div>
             ) : loading.addresses ? (
@@ -1470,17 +1564,17 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="address-actions">
-                          {address.sparky && (
-                            <button 
+                        {address.sparky && (
+                          <button 
                               className="household-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
+                            onClick={(e) => {
+                              e.stopPropagation();
                                 handleViewHousehold(address);
-                              }}
-                            >
+                            }}
+                          >
                               Household
-                            </button>
-                          )}
+                          </button>
+                        )}
                           <button 
                             className="devices-button"
                             onClick={(e) => {
@@ -1568,14 +1662,14 @@ const Dashboard = () => {
                 {deviceModalData?.type === 'sparkies' && 'Sparky\'s'}
                 {deviceModalData?.count !== undefined && ` (${deviceModalData.count.toLocaleString()})`}
               </h3>
-              <button 
+                            <button 
                 className="close-device-modal-button"
                 onClick={handleCloseDeviceModal}
                 title="Close"
-              >
+                            >
                 ✕
-              </button>
-            </div>
+                            </button>
+                          </div>
             <div className="device-modal-content">
               {deviceModalLoading ? (
                 <div className="device-modal-loading">Loading devices...</div>
@@ -1586,8 +1680,8 @@ const Dashboard = () => {
                   {deviceModalData.isSampled && (
                     <div className="device-modal-note">
                       ℹ️ Showing devices from {deviceModalData.sampledAddresses.toLocaleString()} of {deviceModalData.totalAddresses.toLocaleString()} addresses
-                    </div>
-                  )}
+                              </div>
+                            )}
                   {/* Search Box */}
                   <div className="device-modal-search-box">
                     <input
@@ -1626,8 +1720,8 @@ const Dashboard = () => {
                           });
                           return `Showing ${filtered.length} of ${deviceModalData.devices.length} devices`;
                         })()}
-                      </div>
-                    )}
+                  </div>
+                )}
                   </div>
                   <div className="device-modal-list">
                     {deviceModalData.devices
@@ -1665,56 +1759,56 @@ const Dashboard = () => {
                             {device.displayName && ` - ${device.displayName}`}
                             {device.vin && ` (${device.vin})`}
                             {device.meterNumber && ` - Meter #${device.meterNumber}`}
-                          </div>
-                          <button 
+                            </div>
+                            <button 
                             className="json-button-small"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                              onClick={(e) => {
+                                e.stopPropagation();
                               handleViewDeviceJson(device);
-                            }}
-                            title="View JSON"
-                          >
-                            📄
-                          </button>
-                        </div>
+                              }}
+                              title="View JSON"
+                            >
+                              📄
+                            </button>
+                          </div>
                         <div className="device-modal-item-details">
                           {deviceModalData?.type === 'sparkies' ? (
                             <>
                               <div className="device-modal-item-detail">
                                 <span className="label">Serial Number:</span>
                                 <span className="value">{device.serialNumber || device.identifier}</span>
-                              </div>
+                            </div>
                               {device.boxCode && (
                                 <div className="device-modal-item-detail">
                                   <span className="label">Box Code:</span>
                                   <span className="value">{device.boxCode}</span>
-                                </div>
-                              )}
+                  </div>
+                )}
                               {device.addressUuid && (
                                 <div className="device-modal-item-detail">
                                   <span className="label">Address:</span>
                                   <span className="value uuid">{device.addressUuid}</span>
-                                </div>
-                              )}
+                              </div>
+                            )}
                             </>
                           ) : (
                             <>
                               <div className="device-modal-item-detail">
                                 <span className="label">Identifier:</span>
                                 <span className="value uuid">{device.identifier}</span>
-                              </div>
+                          </div>
                               {device.addressUuid && (
                                 <div className="device-modal-item-detail">
                                   <span className="label">Address:</span>
                                   <span className="value uuid">{device.addressUuid}</span>
-                                </div>
-                              )}
+                  </div>
+                )}
                               {device.addressSparky && (
                                 <div className="device-modal-item-detail">
                                   <span className="label">Sparky:</span>
                                   <span className="value">{device.addressSparky}</span>
-                                </div>
-                              )}
+                              </div>
+                            )}
                             </>
                           )}
                           {device.lastChargeState?.batteryLevel && (
@@ -1726,8 +1820,8 @@ const Dashboard = () => {
                                   : (device.lastChargeState.batteryLevel || 0)
                                 }%
                               </span>
-                            </div>
-                          )}
+                  </div>
+                )}
                           {device.lastProductionState?.productionRate !== undefined && (
                             <div className="device-modal-item-detail">
                               <span className="label">Production:</span>
@@ -1736,28 +1830,28 @@ const Dashboard = () => {
                           )}
                           {device.lastTemperatureState?.currentTemperature !== undefined && (
                             <div className="device-modal-item-detail">
-                              <span className="label">Temperature:</span>
+                                <span className="label">Temperature:</span>
                               <span className="value">{device.lastTemperatureState.currentTemperature}°C</span>
-                            </div>
-                          )}
+                              </div>
+                            )}
                           {device.isReachable !== undefined && (
                             <div className="device-modal-item-detail">
                               <span className="label">Status:</span>
                               <span className="value">{device.isReachable ? 'Online' : 'Offline'}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
                   </div>
+                )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                 </>
               ) : (
                 <div className="device-modal-empty">No devices found</div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
+                            </div>
+                    </div>
+                  </div>
+                )}
 
       {/* JSON Modal */}
       {jsonModalOpen && selectedDeviceJson && (

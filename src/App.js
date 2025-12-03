@@ -7,6 +7,8 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import SparkyDetails from './components/SparkyDetails';
 import DevicesDetails from './components/DevicesDetails';
+import SteerableInverters from './components/SteerableInverters';
+import InverterDetail from './components/InverterDetail';
 import './App.css';
 
 function App() {
@@ -38,6 +40,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DevicesDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/steerable-inverters" 
+                element={
+                  <ProtectedRoute>
+                    <SteerableInverters />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/inverter-detail" 
+                element={
+                  <ProtectedRoute>
+                    <InverterDetail />
                   </ProtectedRoute>
                 } 
               />

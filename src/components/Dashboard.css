@@ -316,6 +316,113 @@
   flex-wrap: wrap;
 }
 
+.steerable-energy-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--chargee-space-lg);
+  align-items: start;
+}
+
+.group-energy-card {
+  background: var(--chargee-white);
+  border-radius: var(--chargee-radius-lg);
+  padding: var(--chargee-space-lg);
+  box-shadow: var(--chargee-shadow-md);
+  border: 1px solid var(--chargee-gray-200);
+}
+
+.group-energy-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chargee-space-md);
+}
+
+.group-energy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--chargee-space-md);
+  border-bottom: 1px solid var(--chargee-gray-200);
+}
+
+.group-energy-header h3 {
+  margin: 0;
+  color: var(--chargee-gray-900);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.energy-update-indicator {
+  background: var(--chargee-success);
+  color: var(--chargee-white);
+  padding: var(--chargee-space-xs) var(--chargee-space-sm);
+  border-radius: var(--chargee-radius-md);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.energy-values {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chargee-space-md);
+}
+
+.energy-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--chargee-space-sm) 0;
+}
+
+.energy-label {
+  font-size: 14px;
+  color: var(--chargee-gray-600);
+  font-weight: 500;
+}
+
+.energy-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--chargee-font-mono);
+}
+
+.energy-value.production {
+  color: var(--chargee-blue);
+}
+
+.energy-value.return {
+  color: var(--chargee-success);
+}
+
+.energy-value.delivery {
+  color: var(--chargee-warning);
+}
+
+.energy-loading {
+  text-align: center;
+  color: var(--chargee-gray-500);
+  font-size: 14px;
+  padding: var(--chargee-space-md);
+}
+
+@media (max-width: 768px) {
+  .steerable-energy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .analytics-header-actions {
   display: flex;
   align-items: center;
