@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ScheduleModal.css';
 
-const ScheduleModal = ({ isOpen, onClose, onSave, schedule = null }) => {
+const ScheduleModal = ({ isOpen, onClose, onSave, schedule = null, bulkMode = false, inverterCount = 0 }) => {
   const [scheduleType, setScheduleType] = useState('powerLimit'); // 'powerLimit' or 'zeroExport'
   const [powerLimit, setPowerLimit] = useState(100);
   const [scheduleTime, setScheduleTime] = useState('');
@@ -102,7 +102,12 @@ const ScheduleModal = ({ isOpen, onClose, onSave, schedule = null }) => {
     <div className="schedule-modal-overlay" onClick={handleClose}>
       <div className="schedule-modal" onClick={(e) => e.stopPropagation()}>
         <div className="schedule-modal-header">
-          <h2>{schedule ? 'Edit Schedule' : 'Create Schedule'}</h2>
+          <h2>
+            {bulkMode 
+              ? `Create Schedule for All Steerable Inverters${inverterCount > 0 ? ` (${inverterCount})` : ''}`
+              : schedule ? 'Edit Schedule' : 'Create Schedule'
+            }
+          </h2>
           <button className="close-button" onClick={handleClose}>×</button>
         </div>
         
@@ -193,12 +198,23 @@ const ScheduleModal = ({ isOpen, onClose, onSave, schedule = null }) => {
             </div>
           )}
           
+          {bulkMode && inverterCount > 0 && (
+            <div className="form-group">
+              <div className="bulk-schedule-info">
+                <p>This schedule will be applied to <strong>{inverterCount}</strong> steerable inverter{inverterCount !== 1 ? 's' : ''}.</p>
+              </div>
+            </div>
+          )}
+          
           <div className="form-actions">
             <button type="button" className="button-secondary" onClick={handleClose}>
               Cancel
             </button>
             <button type="submit" className="button-primary">
-              {schedule ? 'Update Schedule' : 'Create Schedule'}
+              {bulkMode 
+                ? `Create Schedule for All (${inverterCount})`
+                : schedule ? 'Update Schedule' : 'Create Schedule'
+              }
             </button>
           </div>
         </form>

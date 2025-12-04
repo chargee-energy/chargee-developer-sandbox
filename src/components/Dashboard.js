@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { groupsAPI, addressesAPI, devicesAPI, sparkyAPI } from '../services/api';
 import ChargeeLogo from './ChargeeLogo';
 import GroupEnergyGraph from './GroupEnergyGraph';
+import ScheduleModal from './ScheduleModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -40,6 +41,9 @@ const Dashboard = () => {
   const [deviceModalLoading, setDeviceModalLoading] = useState(false);
   const [deviceModalSearch, setDeviceModalSearch] = useState('');
   const [groupEnergy, setGroupEnergy] = useState(null);
+  const [bulkScheduleModalOpen, setBulkScheduleModalOpen] = useState(false);
+  const [steerableInverters, setSteerableInverters] = useState([]);
+  const [bulkScheduleLoading, setBulkScheduleLoading] = useState(false);
 
   // Fetch groups on mount
   useEffect(() => {
@@ -467,6 +471,145 @@ const Dashboard = () => {
       return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     } else {
       return 'just now';
+    }
+  };
+
+  const fetchAllSteerableInverters = async () => {
+    if (!selectedGroup) return [];
+    
+    try {
+      // Fetch all addresses for the group
+      const MAX_ADDRESSES = 1000;
+      const firstPageData = await addressesAPI.getAddresses(selectedGroup.uuid, { offset: 0, limit: 1 });
+      const totalAddresses = firstPageData?.meta?.total || 0;
+      const addressesToProcess = Math.min(totalAddresses, MAX_ADDRESSES);
+      
+      // Fetch addresses in batches
+      const batchSize = 100;
+      const batches = Math.ceil(addressesToProcess / batchSize);
+      let allAddresses = [];
+      
+      for (let i = 0; i < batches; i++) {
+        const offset = i * batchSize;
+        const limit = Math.min(batchSize, addressesToProcess - offset);
+        const batchData = await addressesAPI.getAddresses(selectedGroup.uuid, { offset, limit });
+        allAddresses = allAddresses.concat(batchData?.results || []);
+      }
+
+      // Fetch solar inverters from all addresses
+      const deviceBatchSize = 50;
+      const deviceBatches = Math.ceil(allAddresses.length / deviceBatchSize);
+      const allSteerableInverters = [];
+      
+      const extractResults = (data) => Array.isArray(data) ? data : (data?.results || []);
+
+      for (let i = 0; i < deviceBatches; i++) {
+        const batchStart = i * deviceBatchSize;
+        const batchEnd = Math.min(batchStart + deviceBatchSize, allAddresses.length);
+        const addressBatch = allAddresses.slice(batchStart, batchEnd);
+
+        const inverterFetches = addressBatch.map(address => 
+          devicesAPI.getSolarInverters(address.uuid).catch(() => null)
+        );
+
+        const batchResults = await Promise.allSettled(inverterFetches);
+
+        batchResults.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value) {
+            try {
+              const data = result.value;
+              const inverters = extractResults(data);
+              
+              // Filter for steerable inverters and add address info
+              inverters.forEach(inverter => {
+                if (inverter.info?.isSteerable === true) {
+                  allSteerableInverters.push({
+                    ...inverter,
+                    addressUuid: addressBatch[index].uuid,
+                    address: addressBatch[index]
+                  });
+                }
+              });
+            } catch (err) {
+              console.error('Error processing inverter data:', err);
+            }
+          }
+        });
+      }
+
+      return allSteerableInverters;
+    } catch (err) {
+      console.error('Error fetching steerable inverters:', err);
+      return [];
+    }
+  };
+
+  const handleOpenBulkScheduleModal = async () => {
+    setBulkScheduleModalOpen(true);
+    // Fetch steerable inverters when opening modal
+    const inverters = await fetchAllSteerableInverters();
+    setSteerableInverters(inverters);
+  };
+
+  const handleBulkScheduleSave = async (scheduleData) => {
+    if (steerableInverters.length === 0) {
+      setError('No steerable inverters found');
+      return;
+    }
+
+    setBulkScheduleLoading(true);
+    setError('');
+
+    try {
+      // Send schedule to all inverters in parallel batches
+      const batchSize = 10;
+      const batches = Math.ceil(steerableInverters.length / batchSize);
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 0; i < batches; i++) {
+        const batchStart = i * batchSize;
+        const batchEnd = Math.min(batchStart + batchSize, steerableInverters.length);
+        const batch = steerableInverters.slice(batchStart, batchEnd);
+
+        const schedulePromises = batch.map(inverter => 
+          devicesAPI.createSolarInverterSchedule(
+            inverter.addressUuid,
+            inverter.identifier || inverter.uuid,
+            scheduleData
+          ).then(() => ({ success: true, inverter }))
+          .catch(err => ({ success: false, inverter, error: err }))
+        );
+
+        const results = await Promise.allSettled(schedulePromises);
+        
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            if (result.value.success) {
+              successCount++;
+            } else {
+              errorCount++;
+              console.error(`Error creating schedule for inverter ${result.value.inverter.identifier}:`, result.value.error);
+            }
+          } else {
+            errorCount++;
+          }
+        });
+      }
+
+      if (errorCount > 0) {
+        setError(`Schedule created for ${successCount} inverters, but ${errorCount} failed.`);
+      } else {
+        setError('');
+        alert(`Schedule successfully created for all ${successCount} steerable inverters!`);
+      }
+
+      setBulkScheduleModalOpen(false);
+    } catch (err) {
+      console.error('Error creating bulk schedule:', err);
+      setError(err.message || 'Failed to create schedules');
+    } finally {
+      setBulkScheduleLoading(false);
     }
   };
 
@@ -1457,15 +1600,27 @@ const Dashboard = () => {
               <h2>Steerable Inverters & Energy</h2>
             </div>
             <div className="steerable-energy-grid">
-              <div 
-                className="analytics-card"
-                onClick={() => handleAnalyticsClick('steerableInverters', analytics.steerableInverters || 0)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="analytics-content">
-                  <div className="analytics-value">{analytics.steerableInverters || 0}</div>
-                  <div className="analytics-label">Steerable Inverters</div>
+              <div className="steerable-inverters-card-wrapper">
+                <div 
+                  className="analytics-card"
+                  onClick={() => handleAnalyticsClick('steerableInverters', analytics.steerableInverters || 0)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="analytics-content">
+                    <div className="analytics-value">{analytics.steerableInverters || 0}</div>
+                    <div className="analytics-label">Steerable Inverters</div>
+                  </div>
                 </div>
+                <button 
+                  className="bulk-schedule-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenBulkScheduleModal();
+                  }}
+                  disabled={bulkScheduleLoading}
+                >
+                  {bulkScheduleLoading ? 'Loading...' : 'Schedule All'}
+                </button>
               </div>
               
               <div className="group-energy-card">
@@ -1888,6 +2043,19 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Bulk Schedule Modal */}
+      <ScheduleModal
+        isOpen={bulkScheduleModalOpen}
+        onClose={() => {
+          setBulkScheduleModalOpen(false);
+          setSteerableInverters([]);
+        }}
+        onSave={handleBulkScheduleSave}
+        schedule={null}
+        bulkMode={true}
+        inverterCount={steerableInverters.length}
+      />
     </div>
   );
 };

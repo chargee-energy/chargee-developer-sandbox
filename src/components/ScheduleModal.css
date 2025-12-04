@@ -183,4 +183,23 @@
   border-color: var(--chargee-gray-400);
 }
 
+.bulk-schedule-info {
+  background: rgba(0, 191, 165, 0.08);
+  padding: var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  border: 1px solid rgba(0, 191, 165, 0.2);
+}
+
+.bulk-schedule-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--chargee-gray-700);
+  line-height: 1.5;
+}
+
+.bulk-schedule-info strong {
+  color: var(--chargee-green);
+  font-weight: 600;
+}
+
 

@@ -334,6 +334,41 @@
   align-items: start;
 }
 
+.steerable-inverters-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chargee-space-md);
+}
+
+.bulk-schedule-button {
+  background: var(--chargee-green);
+  color: var(--chargee-white);
+  border: none;
+  padding: var(--chargee-space-sm) var(--chargee-space-md);
+  border-radius: var(--chargee-radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.bulk-schedule-button:hover:not(:disabled) {
+  background: var(--chargee-green-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.bulk-schedule-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .group-energy-card {
   background: var(--chargee-white);
   border-radius: var(--chargee-radius-md);
