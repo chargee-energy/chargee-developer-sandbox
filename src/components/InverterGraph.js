@@ -235,3 +235,4 @@ const InverterGraph = ({ addressUuid, solarInverterUuid, sparkySerialNumber }) =
 
 export default InverterGraph;
 
+

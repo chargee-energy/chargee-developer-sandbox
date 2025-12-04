@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { groupsAPI, addressesAPI, devicesAPI, sparkyAPI } from '../services/api';
 import ChargeeLogo from './ChargeeLogo';
+import GroupEnergyGraph from './GroupEnergyGraph';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -1474,20 +1475,23 @@ const Dashboard = () => {
                     <span className="energy-update-indicator">Live</span>
                   </div>
                   {groupEnergy ? (
-                    <div className="energy-values">
-                      <div className="energy-item">
-                        <span className="energy-label">Production</span>
-                        <span className="energy-value production">{groupEnergy.production?.toFixed(1) || '0.0'} W</span>
+                    <>
+                      <div className="energy-values">
+                        <div className="energy-item">
+                          <span className="energy-label">Production</span>
+                          <span className="energy-value production">{groupEnergy.production?.toFixed(1) || '0.0'} W</span>
+                        </div>
+                        <div className="energy-item">
+                          <span className="energy-label">Return</span>
+                          <span className="energy-value return">{groupEnergy.return?.toFixed(1) || '0.0'} W</span>
+                        </div>
+                        <div className="energy-item">
+                          <span className="energy-label">Delivery</span>
+                          <span className="energy-value delivery">{groupEnergy.delivery?.toFixed(1) || '0.0'} W</span>
+                        </div>
                       </div>
-                      <div className="energy-item">
-                        <span className="energy-label">Return</span>
-                        <span className="energy-value return">{groupEnergy.return?.toFixed(1) || '0.0'} W</span>
-                      </div>
-                      <div className="energy-item">
-                        <span className="energy-label">Delivery</span>
-                        <span className="energy-value delivery">{groupEnergy.delivery?.toFixed(1) || '0.0'} W</span>
-                      </div>
-                    </div>
+                      <GroupEnergyGraph groupEnergy={groupEnergy} />
+                    </>
                   ) : (
                     <div className="energy-loading">Loading energy data...</div>
                   )}

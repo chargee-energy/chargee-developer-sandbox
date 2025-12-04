@@ -1,0 +1,52 @@
+.group-energy-graph-container {
+  width: 100%;
+  height: 200px;
+  margin-top: var(--chargee-space-lg);
+  padding-top: var(--chargee-space-md);
+  border-top: 1px solid var(--chargee-gray-200);
+}
+
+.graph-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--chargee-gray-500);
+  font-size: 13px;
+}
+
+.group-energy-tooltip {
+  background: var(--chargee-white);
+  border: 1px solid var(--chargee-gray-300);
+  border-radius: var(--chargee-radius-sm);
+  padding: var(--chargee-space-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tooltip-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chargee-gray-900);
+  margin: 0 0 var(--chargee-space-xs) 0;
+  padding-bottom: var(--chargee-space-xs);
+  border-bottom: 1px solid var(--chargee-gray-200);
+}
+
+.tooltip-item {
+  font-size: 11px;
+  margin: var(--chargee-space-xs) 0;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--chargee-space-md);
+}
+
+.tooltip-label {
+  font-weight: 500;
+  color: var(--chargee-gray-700);
+}
+
+.tooltip-value {
+  font-weight: 600;
+  font-family: var(--chargee-font-mono);
+}
+
